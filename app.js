@@ -47,16 +47,17 @@ db.init();
 
 urls([
     { pattern: "/", view: routes.index, name: "index" },
-    { pattern: "/signals", view: routes.signals, name: "signals" },
-    { pattern: "/signal", view: routes.signal, name: "signal" },
+    { pattern: "/signals/", view: routes.signals, name: "signals" },
+    { pattern: "/signal/:id", view: routes.signal, name: "signal" },
     { pattern: "/add-signal", view: routes.addSignal, name: "add-signal" },
-    { pattern: "/users", view: routes.users, name: "users" },
-    { pattern: "/user", view: routes.user, name: "user" },
-    { pattern: "/faq", view: routes.faq, name: "faq" },
-    { pattern: "/about", view: routes.about, name: "about" },
-    { pattern: "/contacts", view: routes.contacts, name: "contacts" },
-    { pattern: "/for-developers", view: routes.forDevelopers, name: "for-developers" },
-    { pattern: "/for-authorities", view: routes.forАuthorities, name: "for-authorities" }
+    { pattern: "/users/", view: routes.users, name: "users" },
+    { pattern: "/users/:id", view: routes.user, name: "user" },
+    { pattern: "/register/", view: routes.registerUser, name: "register-user" },
+    { pattern: "/faq/", view: routes.faq, name: "faq" },
+    { pattern: "/about/", view: routes.about, name: "about" },
+    { pattern: "/contacts/", view: routes.contacts, name: "contacts" },
+    { pattern: "/for-developers/", view: routes.forDevelopers, name: "for-developers" },
+    { pattern: "/for-authorities/", view: routes.forАuthorities, name: "for-authorities" }
 ], app);
 
 

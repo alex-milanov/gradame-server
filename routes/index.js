@@ -1,45 +1,50 @@
 var db = require('../mongo/db');
 
-exports.index = function(req, res){
+exports.index = function(req, res) {
   res.render('index', { title: 'Express' });
 };
 
-exports.signals = function(req, res){
+exports.signals = function(req, res) {
     res.render('signals', { title: 'Express' });
 };
 
-exports.signal = function(req, res){
-    res.render('signal', { title: 'Express' });
+exports.signal = function(req, res) {
+    console.log(req.params.id);
+    res.render('signal', { id: 'Express' });
 };
 
-exports.addSignal = function(req, res){
+exports.addSignal = function(req, res) {
     res.render('add-signal', { title: 'Express' });
 };
 
-exports.users = function(req, res){
+exports.users = function(req, res) {
     res.render('users', { title: 'Express' });
 };
 
-exports.user = function(req, res){
+exports.user = function(req, res) {
     res.render('user', { title: 'Express' });
 };
 
-exports.faq = function(req, res){
+exports.faq = function(req, res) {
     res.render('faq', { title: 'Express' });
 };
 
-exports.about = function(req, res){
+exports.about = function(req, res) {
     res.render('about', { title: 'Express' });
 };
 
-exports.contacts = function(req, res){
+exports.contacts = function(req, res) {
     res.render('contacts', { title: 'Express' });
 };
 
-exports.forDevelopers = function(req, res){
+exports.forDevelopers = function(req, res) {
     res.render('for-developers', { title: 'Express' });
 };
 
-exports.forАuthorities = function(req, res){
+exports.forАuthorities = function(req, res) {
     res.render('for-authorities', { title: 'Express' });
+};
+
+exports.registerUser = function(req, res) {
+    res.render('register-user', { title: 'Express' });
 };
