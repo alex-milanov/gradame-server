@@ -1,4 +1,6 @@
 var db = require('../mongo/db');
+var fs = require('fs');
+var md5 = require('../utils/md5');
 
 exports.index = function(req, res) {
   res.render('index', { user: req.user });
@@ -52,11 +54,39 @@ exports.forАuthorities = function(req, res) {
 
 exports.logOut = function(req, res) {
     req.logout();
-    res.redirect('/');
+    res.redirect('back');
 };
 
 exports.registerUser = function(req, res) {
     if(req.body.email && req.body.password) {
+
+        if(req.files.avatar.size != 0) {
+            var fileType = req.files.avatar.type;
+
+            console.log(req.files.avatar);
+
+            if(fileType === 'image/gif' || fileType === 'image/jpeg' || fileType === 'image/jpg' || fileType === 'image/png') {
+                fs.readFile(req.files.avatar.path, function (err, data) {
+                    // ...
+
+                    var ext = '.jpg';
+                    if(fileType === 'image/gif') {
+                        ext = '.gif';
+                    } else if(fileType ==='image/png') {
+                        ext = '.png';
+                    }
+
+                    var imgName = md5(req.body.email) + ext;
+
+                    var newPath = __dirname + "/../public/avatars/" + imgName;
+                    fs.writeFile(newPath, data, function (err) {
+                        console.log(err);
+                        console.log('uploaded');
+                    });
+                });
+            }
+        }
+
         var newUser = db.user({
             name: req.body.name,
             email: req.body.email,

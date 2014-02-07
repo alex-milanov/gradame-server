@@ -1,5 +1,5 @@
 
-<form action="#" method="post">
+<form action="#" method="post" enctype="multipart/form-data">
 
     {{#if success}}
     <div class="success">
@@ -28,6 +28,11 @@
     <label>
         <b>Password:</b>
         <input type="text" name="password" value="{{ user.password }}" />
+    </label>
+
+    <label>
+        <b>Avatar:</b>
+        <input type="file" name="avatar" />
     </label>
 
     {{#if user.id}}
