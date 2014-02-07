@@ -1,1 +1,34 @@
-register user
+
+<form action="#" method="post">
+
+    {{#if success}}
+    <div class="success">
+        <h2>SUCCESS SAVE</h2>
+        <div>user id: {{ user._id }}</div>
+    </div>
+    {{/if}}
+
+    {{#if error}}
+    <div class="error">
+        <h2>ERRRRROR</h2>
+        <div>{{ error }}</div>
+    </div>
+    {{/if}}
+
+    <label>
+        <b>name:</b>
+        <input type="text" name="name" value="{{ user.name }}" />
+    </label>
+
+    <label>
+        <b>Email:</b>
+        <input type="email" name="email" value="{{ user.email }}" />
+    </label>
+
+    <label>
+        <b>Password:</b>
+        <input type="text" name="password" value="{{ user.password }}" />
+    </label>
+
+    <button>Save</button>
+</form>
