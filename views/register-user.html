@@ -30,5 +30,11 @@
         <input type="text" name="password" value="{{ user.password }}" />
     </label>
 
+    {{#if user.id}}
+    <div>
+        <a href="{{ url 'user' }}{{ user._id }}">{{ user.name }} page</a>
+    </div>
+    {{/if}}
+
     <button>Save</button>
 </form>

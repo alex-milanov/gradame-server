@@ -21,7 +21,13 @@ exports.users = function(req, res) {
 };
 
 exports.user = function(req, res) {
-    res.render('user', { title: 'Express' });
+    var id = req.params.id;
+    db.user.findById(id, function(err, user) {
+        res.render('user', {
+            user: user,
+            error: err
+        });
+    });
 };
 
 exports.faq = function(req, res) {

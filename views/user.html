@@ -1,1 +1,34 @@
-user
+{{#if error}}
+<div class="error">
+    <h2>ERRRRROR</h2>
+    <div>{{ error }}</div>
+</div>
+{{/if}}
+
+<div>
+    <b>name: </b>{{ user.name }}
+</div>
+
+<div>
+    <b>id: </b>{{ user._id }}
+</div>
+
+<div>
+    <b>email: </b>{{ user.email }}
+</div>
+
+<div>
+    <b>password: </b>{{ user.password }}
+</div>
+
+<div>
+    <b>validated: </b>{{ user.validated }}
+</div>
+
+<div>
+    <b>registerAt: </b>{{ user.registerAt }}
+</div>
+
+<div>
+    <b>location: </b>{{ user.location }}
+</div>
