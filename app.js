@@ -10,6 +10,7 @@ var path = require('path');
 var db = require('./mongo/db');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
+var urls = require('urls');
 
 var app = express();
 
@@ -44,7 +45,19 @@ if ('development' == app.get('env')) {
 db.init();
 // ---------------------------------------------------------
 
-app.get('/', routes.index);
+urls([
+    { pattern: "/", view: routes.index, name: "index" },
+    { pattern: "/signals", view: routes.signals, name: "signals" },
+    { pattern: "/signal", view: routes.signal, name: "signal" },
+    { pattern: "/add-signal", view: routes.addSignal, name: "add-signal" },
+    { pattern: "/users", view: routes.users, name: "users" },
+    { pattern: "/user", view: routes.user, name: "user" },
+    { pattern: "/faq", view: routes.faq, name: "faq" },
+    { pattern: "/about", view: routes.about, name: "about" },
+    { pattern: "/contacts", view: routes.contacts, name: "contacts" },
+    { pattern: "/for-developers", view: routes.forDevelopers, name: "for-developers" },
+    { pattern: "/for-authorities", view: routes.forАuthorities, name: "for-authorities" }
+], app);
 
 
 passport.use(new LocalStrategy(
@@ -61,6 +74,9 @@ passport.use(new LocalStrategy(
         });
     }
 ));
+
+
+
 
 passport.serializeUser(function(user, done) {
     console.log('serializeUser');
