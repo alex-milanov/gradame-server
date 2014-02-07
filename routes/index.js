@@ -1,7 +1,7 @@
 var db = require('../mongo/db');
 
 exports.index = function(req, res) {
-  res.render('index', { title: 'Express' });
+  res.render('index', { user: req.user });
 };
 
 exports.signals = function(req, res) {
@@ -48,6 +48,11 @@ exports.forDevelopers = function(req, res) {
 
 exports.forАuthorities = function(req, res) {
     res.render('for-authorities', { title: 'Express' });
+};
+
+exports.logOut = function(req, res) {
+    req.logout();
+    res.redirect('/');
 };
 
 exports.registerUser = function(req, res) {

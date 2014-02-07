@@ -21,6 +21,11 @@ a {
   a:hover {
     background: #00b7ff;
     color: white; }
+  a.button {
+    background: #00b7ff;
+    color: white; }
+    a.button:hover {
+      background: #00b7ee; }
 
 label {
   display: block;

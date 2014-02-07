@@ -1,1 +1,20 @@
-index
+<form action="/login/" method="post">
+
+    {{#if user }}
+        <h2>user is logged</h2>
+        <div>{{ user.name }} ({{ user.email }})</div>
+        <div><a href="{{ url 'logout' }}" class="button">logout</a></div>
+    {{/if}}
+
+    <label>
+        <b>Email:</b>
+        <input type="email" name="username" />
+    </label>
+
+    <label>
+        <b>Password:</b>
+        <input type="text" name="password" />
+    </label>
+
+    <button>Login</button>
+</form>
