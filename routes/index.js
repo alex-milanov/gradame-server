@@ -63,21 +63,9 @@ exports.registerUser = function(req, res) {
         if(req.files.avatar.size != 0) {
             var fileType = req.files.avatar.type;
 
-            console.log(req.files.avatar);
-
             if(fileType === 'image/gif' || fileType === 'image/jpeg' || fileType === 'image/jpg' || fileType === 'image/png') {
                 fs.readFile(req.files.avatar.path, function (err, data) {
-                    // ...
-
-                    var ext = '.jpg';
-                    if(fileType === 'image/gif') {
-                        ext = '.gif';
-                    } else if(fileType ==='image/png') {
-                        ext = '.png';
-                    }
-
-                    var imgName = md5(req.body.email) + ext;
-
+                    var imgName = md5(req.body.email);
                     var newPath = __dirname + "/../public/avatars/" + imgName;
                     fs.writeFile(newPath, data, function (err) {
                         console.log(err);

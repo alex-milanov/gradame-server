@@ -25,7 +25,6 @@ module.exports = {
     },
 
     user: mongoose.model('User', schemas.userSchema),
-    avatar: mongoose.model('Avatar', schemas.avatarSchema),
     flagged: mongoose.model('Flagged', schemas.flaggedSchema),
     signal: mongoose.model('Signal', schemas.signalSchema)
 };

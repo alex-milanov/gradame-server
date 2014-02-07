@@ -6,11 +6,6 @@ var Schema = require('mongoose').Schema;
 
 module.exports = {
 
-    avatarSchema: {
-        hash: String,
-        imageUrl: String
-    },
-
     userSchema: {
         name: String,
         email: String,
