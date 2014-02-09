@@ -17,14 +17,13 @@ module.exports = {
         });
         db.once('open', function callback () {
             console.log("MongoDB connection successful");
-
             if(successHandler) {
                 successHandler();
             }
         });
     },
 
-    user: mongoose.model('User', schemas.userSchema),
-    flagged: mongoose.model('Flagged', schemas.flaggedSchema),
-    signal: mongoose.model('Signal', schemas.signalSchema)
+    User: mongoose.model('User', schemas.userSchema),
+    Flagged: mongoose.model('Flagged', schemas.flaggedSchema),
+    Signal: mongoose.model('Signal', schemas.signalSchema)
 };

@@ -3,7 +3,7 @@ var fs = require('fs');
 var md5 = require('../utils/md5');
 
 exports.index = function(req, res) {
-  res.render('index', { user: req.user });
+  res.render('index', { User: req.User });
 };
 
 exports.signals = function(req, res) {
@@ -22,11 +22,11 @@ exports.users = function(req, res) {
     res.render('users', { title: 'Express' });
 };
 
-exports.user = function(req, res) {
+exports.User = function(req, res) {
     var id = req.params.id;
-    db.user.findById(id, function(err, user) {
+    db.User.findById(id, function(err, user) {
         res.render('user', {
-            user: user,
+            User: user,
             error: err
         });
     });
@@ -66,7 +66,7 @@ exports.registerUser = function(req, res) {
             if(fileType === 'image/gif' || fileType === 'image/jpeg' || fileType === 'image/jpg' || fileType === 'image/png') {
                 fs.readFile(req.files.avatar.path, function (err, data) {
                     var imgName = md5(req.body.email);
-                    var newPath = __dirname + "/../public/avatars/" + imgName;
+                    var newPath = __dirname + "/../public/avatar/" + imgName;
                     fs.writeFile(newPath, data, function (err) {
                         console.log(err);
                         console.log('uploaded');
@@ -75,19 +75,19 @@ exports.registerUser = function(req, res) {
             }
         }
 
-        var newUser = db.user({
+        var newUser = db.User({
             name: req.body.name,
             email: req.body.email,
             password: req.body.password
         }).save(function(err, user) {
             var success = err ? false : true;
-            res.render('register-user', {
-                user: user,
+            res.render('register-User', {
+                User: user,
                 error: err,
                 success: success
             });
         });
     } else {
-        res.render('register-user');
+        res.render('register-User');
     }
 };

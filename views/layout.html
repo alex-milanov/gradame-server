@@ -15,6 +15,10 @@
             <a href="{{ url 'users' }}">users</a>
             <a href="{{ url 'user' }}52f4df1a3288e277c803fc49">user with id:52f4df1a3288e277c803fc49</a>
             <a href="{{ url 'register-user' }}">register</a>
+
+            {{#if user }}
+                {{ user.name }} ({{ user.email }}) <a href="{{ url 'logout' }}" class="button">logout</a>
+            {{/if}}
         </nav>
     </header>
 

@@ -11,6 +11,7 @@ var db = require('./mongo/db');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var urls = require('urls');
+var api = require('./api/api');
 
 var app = express();
 
@@ -44,21 +45,23 @@ if ('development' == app.get('env')) {
 // ---------------------------------------------------------
 db.init();
 // ---------------------------------------------------------
+api.init(app);
+// ---------------------------------------------------------
 
 urls([
-    { pattern: "/",                 view: routes.index,             name: "index",          get: true },
-    { pattern: "/logout/",          view: routes.logOut,            name: "logout",         get: true },
-    { pattern: "/signals/",         view: routes.signals,           name: "signals",        get: true },
-    { pattern: "/signal/:id",       view: routes.signal,            name: "signal",         get:true },
-    { pattern: "/add-signal",       view: routes.addSignal,         name: "add-signal",     get:true },
-    { pattern: "/users/",           view: routes.users,             name: "users",          get:true },
-    { pattern: "/users/:id",        view: routes.user,              name: "user",           get:true },
-    { pattern: "/register/",        view: routes.registerUser,      name: "register-user",  get:true, post: true },
-    { pattern: "/faq/",             view: routes.faq,               name: "faq",            get:true },
-    { pattern: "/about/",           view: routes.about,             name: "about",          get:true },
-    { pattern: "/contacts/",        view: routes.contacts,          name: "contacts",       get:true },
-    { pattern: "/for-developers/",  view: routes.forDevelopers,     name: "for-developers", get:true },
-    { pattern: "/for-authorities/", view: routes.forАuthorities,    name: "for-authorities", get:true }
+    { pattern: "/",                 view: routes.index,             name: "index"},
+    { pattern: "/logout/",          view: routes.logOut,            name: "logout"},
+    { pattern: "/signals/",         view: routes.signals,           name: "signals"},
+    { pattern: "/signal/:id",       view: routes.signal,            name: "signal"},
+    { pattern: "/add-signal",       view: routes.addSignal,         name: "add-signal"},
+    { pattern: "/users/",           view: routes.users,             name: "users"},
+    { pattern: "/users/:id",        view: routes.User,              name: "user", methods: []},
+    { pattern: "/register/",        view: routes.registerUser,      name: "register-User",  methods: ['post', 'get'] },
+    { pattern: "/faq/",             view: routes.faq,               name: "faq"},
+    { pattern: "/about/",           view: routes.about,             name: "about"},
+    { pattern: "/contacts/",        view: routes.contacts,          name: "contacts"},
+    { pattern: "/for-developers/",  view: routes.forDevelopers,     name: "for-developers"},
+    { pattern: "/for-authorities/", view: routes.forАuthorities,    name: "for-authorities"}
 ], app);
 
 //LOGIN WITH PASSPORT AND USER/PASS
@@ -66,7 +69,7 @@ passport.use(new LocalStrategy(
     function(username, password, done) {
         console.log("LocalStrategy");
 
-        db.user.findOne({ email: username }, function(err, user) {
+        db.User.findOne({ email: username }, function(err, user) {
             if (err) { return done(err); }
             if (!user) {
                 return done(null, false, { message: 'Incorrect username.' });
@@ -87,7 +90,7 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(id, done) {
     console.log('deserializeUser');
-    db.user.findById(id, function(err, user) {
+    db.User.findById(id, function(err, user) {
         done(err, user);
     });
 });

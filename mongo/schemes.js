@@ -22,7 +22,7 @@ module.exports = {
         type: String,
         author: { type: Schema.Types.ObjectId, ref: 'User' },
         authorName: String,
-        authorEmail: String, //with the hash of the email we will can take the user's avatar
+        authorEmail: String, //with the hash of the email we will can take the User's avatar
         description: String,
         location: {
             lat: String,
@@ -40,7 +40,7 @@ module.exports = {
         comments: [ {
             author: { type: Schema.Types.ObjectId, ref: 'User' },
             authorName: String,
-            authorEmail: String, //with the hash of the email we will can take the user's avatar
+            authorEmail: String, //with the hash of the email we will can take the User's avatar
             date: { type: Date, default: Date.now },
             imageUrl: String,
             text: String
