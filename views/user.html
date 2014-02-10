@@ -5,6 +5,10 @@
 </div>
 {{/if}}
 
+{{#if user._id }}
+    <img src="/avatar/{{ user._id }}" width="50" height="50" alt=""/>
+{{/if}}
+
 <div>
     <b>name: </b>{{ user.name }}
 </div>

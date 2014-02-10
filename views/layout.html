@@ -17,7 +17,7 @@
             <a href="{{ url 'register-user' }}">register</a>
 
             {{#if user }}
-                {{ user.name }} ({{ user.email }}) <a href="{{ url 'logout' }}" class="button">logout</a>
+            <img src="/avatar/{{ user._id }}" width="50" height="50" alt=""/> {{ user.name }} ({{ user.email }}) <a href="{{ url 'logout' }}" class="button">logout</a>
             {{/if}}
         </nav>
     </header>

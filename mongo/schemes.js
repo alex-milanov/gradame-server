@@ -22,7 +22,6 @@ module.exports = {
         type: String,
         author: { type: Schema.Types.ObjectId, ref: 'User' },
         authorName: String,
-        authorEmail: String, //with the hash of the email we will can take the User's avatar
         description: String,
         location: {
             lat: String,
@@ -30,7 +29,7 @@ module.exports = {
         },
         address: String,
         status: String,
-        imageUrl: String,
+        image: String,
         votes: [{
             author: { type: Schema.Types.ObjectId, ref: 'User'}
         }],
@@ -40,12 +39,11 @@ module.exports = {
         comments: [ {
             author: { type: Schema.Types.ObjectId, ref: 'User' },
             authorName: String,
-            authorEmail: String, //with the hash of the email we will can take the User's avatar
             date: { type: Date, default: Date.now },
-            imageUrl: String,
+            image: String,
             text: String
         } ],
-        validate: Boolean,
+        validated: Boolean,
         validatedBy: { type: Schema.Types.ObjectId, ref: 'User' }
     },
 

@@ -60,27 +60,30 @@ exports.logOut = function(req, res) {
 exports.registerUser = function(req, res) {
     if(req.body.email && req.body.password) {
 
-        if(req.files.avatar.size != 0) {
-            var fileType = req.files.avatar.type;
-
-            if(fileType === 'image/gif' || fileType === 'image/jpeg' || fileType === 'image/jpg' || fileType === 'image/png') {
-                fs.readFile(req.files.avatar.path, function (err, data) {
-                    var imgName = md5(req.body.email);
-                    var newPath = __dirname + "/../public/avatar/" + imgName;
-                    fs.writeFile(newPath, data, function (err) {
-                        console.log(err);
-                        console.log('uploaded');
-                    });
-                });
-            }
-        }
-
         var newUser = db.User({
             name: req.body.name,
             email: req.body.email,
             password: req.body.password
         }).save(function(err, user) {
-            var success = err ? false : true;
+
+            if(!err) {
+                var success = err ? false : true;
+
+                if(req.files.avatar.size != 0) {
+                    var fileType = req.files.avatar.type;
+
+                    if(fileType === 'image/gif' || fileType === 'image/jpeg' || fileType === 'image/jpg' || fileType === 'image/png') {
+                        fs.readFile(req.files.avatar.path, function (err, data) {;
+                            var newPath = __dirname + "/../public/avatar/" + user._id;
+                            fs.writeFile(newPath, data, function (err) {
+                                console.log(err);
+                                console.log('uploaded');
+                            });
+                        });
+                    }
+                }
+            }
+
             res.render('register-User', {
                 User: user,
                 error: err,

@@ -56,7 +56,7 @@ urls([
     { pattern: "/add-signal",       view: routes.addSignal,         name: "add-signal"},
     { pattern: "/users/",           view: routes.users,             name: "users"},
     { pattern: "/users/:id",        view: routes.User,              name: "user", methods: []},
-    { pattern: "/register/",        view: routes.registerUser,      name: "register-User",  methods: ['post', 'get'] },
+    { pattern: "/register/",        view: routes.registerUser,      name: "register-user",  methods: ['post', 'get'] },
     { pattern: "/faq/",             view: routes.faq,               name: "faq"},
     { pattern: "/about/",           view: routes.about,             name: "about"},
     { pattern: "/contacts/",        view: routes.contacts,          name: "contacts"},
