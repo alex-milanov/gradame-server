@@ -31,14 +31,16 @@ function initApp(app) {
     var userResource = {
         name: "users",
         model: db.User,
-        selectedFields: 'name registerAt',
+        listFields: 'name',
+        detailedFields: 'name registerAt',
         methods: ['get', 'post']
     };
 
     var signalsResource = {
         name: "signals",
         model: db.Signal,
-        selectedFields: 'type author authorName description location address status image votes thanks comments validated registerAt',
+        listFields: 'type image author authorName description location',
+        detailedFields: 'type author authorName description location address status image votes thanks comments validated registerAt',
         methods: ['get', 'post']
     };
 
@@ -78,7 +80,7 @@ function initApp(app) {
                 var requestHandler = function(req, res) {
                     var query = req.query;
                     var id = req.params.id;
-                    var perPage = query.perPage ? query.perPage : defaultPerPage;
+                    var perPage = query.per_page ? query.per_page : defaultPerPage;
                     var page = query.page ? query.page : 0;
                     var metadata = {};
                     // the mongoose query
@@ -86,7 +88,7 @@ function initApp(app) {
                     if(id) {
                         //current item by id
                         q = resource.model.findById(id);
-                        q.select(resource.selectedFields);
+                        q.select(resource.detailedFields);
                     } else {
                         //get list
                         var nextPageUrl = resourceUrl + '?page=' + (parseInt(page) + 1);
@@ -97,9 +99,9 @@ function initApp(app) {
                         }
 
                         q = resource.model.find({});
-                        q.limit(perPage)
-                        q.skip(page * perPage)
-                        q.select(resource.selectedFields);
+                        q.limit(perPage);
+                        q.skip(page * perPage);
+                        q.select(resource.listFields);
 
                         //sort
                         if(query.sort) {
