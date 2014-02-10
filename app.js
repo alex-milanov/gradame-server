@@ -10,6 +10,7 @@ var path = require('path');
 var db = require('./mongo/db');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
+var BearerStrategy = require('passport-http-bearer').Strategy;
 var urls = require('urls');
 var api = require('./api/api');
 
@@ -102,6 +103,38 @@ app.post('/login/',
         failureFlash: true })
 );
 
+// PASSPORT OAUTH2
+passport.use(new BearerStrategy({
+        realm: 'Clients'
+    },
+    function(token, done) {
+        //always loged successfull
+        console.log('api auth with token: ' + token);
+        return done(null, {}, { scope: 'all' });
+        /*
+         // CHECK FOR TOKEN
+         User.findOne({ token: token }, function (err, user) {
+         if (err) { return done(err); }
+         if (!user) { return done(null, false); }
+         return done(null, user, { scope: 'read' });
+         });
+         */
+    }
+));
+
+app.get('/api/auth',
+    passport.authenticate('bearer', { session: false }),
+    function(req, res) {
+        console.log(req.host);
+        res.send('success ' + req.host);
+    });
+//end oauth2
+
+app.get('/api/authtest', function(req, res) {
+    res.send('test' + req.authInfo);
+});
+
+
 http.createServer(app).listen(app.get('port'), function(){
-  console.log('Express server listening on port ' + app.get('port'));
+    console.log('Express server listening on port ' + app.get('port'));
 });

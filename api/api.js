@@ -2,7 +2,6 @@
  * Created by nikolaialeksandrenko on 2/8/14.
  */
 var db = require('../mongo/db');
-var fs = require('fs');
 
 //"meta": {
 //    "limit": 20,
@@ -24,7 +23,7 @@ var fs = require('fs');
 function initApp(app) {
 
     var apiBaseUrl = '/api';
-    var apiResponseMetadata = {};
+    var apiResponseResources = [];
     var resources = [];
 
     var defaultPerPage = 20;
@@ -55,54 +54,98 @@ function initApp(app) {
 
             var resource = resources[i];
             var resourceUrl = apiBaseUrl + '/' + resource.name;
+            var resourceDetailedUrl = resourceUrl + '/:id';
 
             //TODO: validator for resource - name, model - existing, selectedFields can me optional, methods
-
-            //create api metadata
-            apiResponseMetadata[resource.name] = resourceUrl;
-            //end creating api metadata
 
             //create methods
             for(var m=0; m < resource.methods.length; m++) {
                 var method = resource.methods[m];
 
-                app[method](resourceUrl, function(req, res) {
+                //create api metadata
+                apiResponseResources.push(
+                    {
+                        url: resourceUrl,
+                        method: method
+                    },
+                    {
+                        url: resourceDetailedUrl,
+                        method: method
+                    }
+                );
+                //end creating api metadata
+
+                var requestHandler = function(req, res) {
                     var query = req.query;
+                    var id = req.params.id;
                     var perPage = query.perPage ? query.perPage : defaultPerPage;
                     var page = query.page ? query.page : 0;
+                    var metadata = {};
+                    // the mongoose query
+                    var q = {};
+                    if(id) {
+                        //current item by id
+                        q = resource.model.findById(id);
+                        q.select(resource.selectedFields);
+                    } else {
+                        //get list
+                        var nextPageUrl = resourceUrl + '?page=' + (parseInt(page) + 1);
+                        var previousPageUrl = parseInt(page) === 0 ? null : resourceUrl + '?page=' + (parseInt(page) - 1);
 
-                    var nextPageUrl = resourceUrl + '?page=' + (parseInt(page) + 1);
-                    var previousPageUrl = parseInt(page) === 0 ? null : resourceUrl + '?page=' + (parseInt(page) - 1);
+                        if(perPage !== defaultPerPage) {
+                            nextPageUrl += '&perPage=' + perPage;
+                        }
 
-                    if(perPage !== defaultPerPage) {
-                        nextPageUrl += '&perPage=' + perPage;
+                        q = resource.model.find({});
+                        q.limit(perPage)
+                        q.skip(page * perPage)
+                        q.select(resource.selectedFields);
+
+                        //sort
+                        if(query.sort) {
+                            q.sort(query.sort);
+                        }
+
+                        metadata = {
+                            per_page: perPage,
+                            next: nextPageUrl,
+                            page: page,
+                            previous: previousPageUrl,
+                            total_count: ''
+                        };
                     }
 
-                    //sort
                     //fields
+                    //populate
                     //filter
 
-                    var q = resource.model.find({})
-                        .limit(perPage)
-                        .skip(page * perPage)
-                        .select(resource.selectedFields);
+                    var executeQuery = function() {
+                        q.exec(function(err, entities) {
+                            var response = {
+                                metadata: metadata,
+                                data: entities ? entities : {}
+                            };
 
-                    q.exec(function(err, entities) {
-                        var response = {
-                            metadata: {
-                                per_page: perPage,
-                                next: nextPageUrl,
-                                page: page,
-                                previous: previousPageUrl
-                            },
-                            data: entities ? entities : {}
-                        };
+                            if(err) { response.error = err; }
 
-                        if(err) { response.error = err; }
+                            res.send(response);
+                        });
+                    }
 
-                        res.send(response);
-                    });
-                });
+                    if(!id) {
+                        var total = '-';
+                        resource.model.count(function(err, count) {
+                            metadata.total_count = count;
+                            executeQuery();
+                        });
+                    } else {
+                        executeQuery();
+                    }
+                };
+
+                app[method](resourceUrl, requestHandler);
+                app[method](resourceDetailedUrl, requestHandler);
+
             }
         })();
     }
@@ -110,7 +153,7 @@ function initApp(app) {
     //the standart api/ url with metadata responce
     app.get(apiBaseUrl, function(req, res) {
         res.send( {
-            metadata: apiResponseMetadata
+            resources: apiResponseResources
         });
     });
 }
@@ -119,17 +162,5 @@ module.exports = {
     init: function(app) {
 
         initApp(app);
-
-        app.get('/api2', function(req, res) {
-
-            var response = {
-                metadata: {
-                    users: 'http://127.0.0.1/api/users',
-                    signals: 'http://127.0.0.1/api/signals'
-                }
-            };
-
-            res.send(response);
-        });
     }
 };

@@ -11,6 +11,7 @@
     "mongoose": "~3.8.6",
     "passport": "~0.2.0",
     "passport-local": "~0.1.6",
-    "urls": "0.0.3"
+    "urls": "0.0.3",
+    "passport-http-bearer": "~1.0.1"
   }
 }
