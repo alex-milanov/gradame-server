@@ -32,7 +32,7 @@ function initApp(app) {
         name: "users",
         model: db.User,
         listFields: 'name',
-        detailedFields: 'name registerAt',
+        detailedFields: 'name registerAt validated',
         methods: ['get', 'post']
     };
 

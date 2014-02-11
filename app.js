@@ -13,6 +13,7 @@ var LocalStrategy = require('passport-local').Strategy;
 var BearerStrategy = require('passport-http-bearer').Strategy;
 var urls = require('urls');
 var api = require('./api/api');
+var hbs = require('hbs');
 
 var app = express();
 
@@ -64,6 +65,28 @@ urls([
     { pattern: "/for-developers/",  view: routes.forDevelopers,     name: "for-developers"},
     { pattern: "/for-authorities/", view: routes.forАuthorities,    name: "for-authorities"}
 ], app);
+
+
+// handlebars extend
+
+var blocks = {};
+
+hbs.registerHelper('extend', function(name, context) {
+    var block = blocks[name];
+    if (!block) {
+        block = blocks[name] = [];
+    }
+
+    block.push(context.fn(this)); // for older versions of handlebars, use block.push(context(this));
+});
+
+hbs.registerHelper('block', function(name) {
+    var val = (blocks[name] || []).join('\n');
+
+    // clear the block
+    blocks[name] = [];
+    return val;
+});
 
 //LOGIN WITH PASSPORT AND USER/PASS
 passport.use(new LocalStrategy(

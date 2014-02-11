@@ -3,38 +3,98 @@
 <head>
     <title></title>
     <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
+    <script src="/assets/js/jquery-2.1.0.min.js"></script>
+    <script src="/assets/js/app.js"></script>
 </head>
 
 <body>
-    <header>
-        <nav>
-            <a href="/">index</a>
-            <a href="{{ url 'signals' }}">signals</a>
-            <a href="{{ url 'signal' }}23235235">signal</a>
-            <a href="{{ url 'add-signal' }}">add-signal</a>
-            <a href="{{ url 'users' }}">users</a>
-            <a href="{{ url 'user' }}52f4df1a3288e277c803fc49">user with id:52f4df1a3288e277c803fc49</a>
-            <a href="{{ url 'register-user' }}">register</a>
 
-            {{#if user }}
-            <img src="/avatar/{{ user._id }}" width="50" height="50" alt=""/> {{ user.name }} ({{ user.email }}) <a href="{{ url 'logout' }}" class="button">logout</a>
-            {{/if}}
+<div class="wrapper">
+
+<div id="header">
+    <div id="logo"><a href="/">GRADA.ME</a></div>
+    <nav>
+        <a href="/">Начало</a>
+        <a href="{{ url 'signals' }}">Сигнали</a>
+        <a href="{{ url 'users' }}">Класация</a>
+        <a href="#" id="login-btn">Вход</a>
+        <a href="{{ url 'add-signal' }}">Подай сигнал</a>
+    </nav>
+
+    {{#if user }}
+    <img src="/avatar/{{ user._id }}" width="50" height="50" alt=""/> {{ user.name }} ({{ user.email }}) <a href="{{ url 'logout' }}" class="button">logout</a>
+    {{/if}}
+
+    <div class="clear"></div>
+
+    <!-- login -->
+    <div class="block hide bg" id="login-panel">
+        <form action="/login/" method="post">
+            <label>
+                <b>Email:</b>
+                <input type="email" name="username" />
+            </label>
+
+            <label>
+                <b>Password:</b>
+                <input type="text" name="password" />
+            </label>
+
+            <button>Login</button>
+        </form>
+
+        <a href="#" id="register-btn">Pегистрация</a>
+        <a href="#" id="lostpassword-btn">Забравена парола?</a>
+    </div>
+
+    <!-- lost password -->
+    <div class="block hide bg" id="lostpassword-panel">
+        <form action="">
+            <input type="text" placeholder="your@email.com" />
+            <button>Изпрати</button>
+        </form>
+    </div>
+
+    <!-- register -->
+    <div class="block hide bg" id="register-panel">
+        <form action="">
+            <input type="text" placeholder="your@email.com" />
+            <input type="password" placeholder="password" />
+            <input type="password" placeholder="retype password" />
+            <button>Регистрация</button>
+        </form>
+    </div>
+</div>
+
+<div id="body">
+    {{{ body }}}
+</div>
+
+
+
+
+<div id="footer" class="block">
+
+    {{{block "footer"}}}
+
+    <div class="block">
+        <nav style="float: left;">
+            <a href="/">Начало</a>
+            <a href="{{ url 'signals' }}">Сигнали</a>
+            <a href="{{ url 'users' }}">Класация</a>
+            <a href="{{ url 'faq' }}">FAQ</a>
+            <a href="{{ url 'about' }}">За нас</a>
+            <a href="{{ url 'contacts' }}">За контакти</a>
         </nav>
-    </header>
 
-    <wrapper>
-        {{{body}}}
-    </wrapper>
+        <a href="#" style="float: right">Проект на obshtestvo.bg</a>
+    </div>
+</div>
 
-    <footer>
-        <nav>
-            <a href="{{ url 'faq' }}">faq</a>
-            <a href="{{ url 'about' }}">about</a>
-            <a href="{{ url 'contacts' }}">contacts</a>
-            <a href="{{ url 'for-developers' }}">for developers</a>
-            <a href="{{ url 'for-authorities' }}">for authorities</a>
-        </nav>
-    </footer>
+</div>
+
+
+
 </body>
 
 </html>

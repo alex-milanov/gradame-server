@@ -2,55 +2,56 @@ body
   margin: 0
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif
 
-header,
-footer
-  padding: 20px
-  background: #fafafa
-  display: block
-
-wrapper
-  padding: 40px 30px
-  display: block
+p
+  padding: 0
+  margin: 0
 
 a
-  color: #00B7FF
-  display: inline-block
-  padding: 4px 8px
-  text-decoration: none
-  border-radius: 3px
-
   &:hover
-    background: #00B7FF
-    color: #fff
-
-  &.button
-    background: #00B7FF
-    color: #ffffff
-
-    &:hover
-      background: #00B7ee
-
+    text-decoration: none
+    
 label
+  cursor: pointer
+
+ul
+  margin: 0
+  padding: 0
+
+  li
+    list-style: none
+
+nav
+  a
+    padding: 2px 10px
+    text-transform: uppercase
+    color: #333
+    text-decoration: none
+
+.wrapper
+  width: 1200px
+  margin: auto
+
+.block
   display: block
-  padding: 10px 0
+  padding: 20px 0
+
+.bg
+  background: #eee
+  margin-bottom: 10px
+  padding: 20px !important
+
+.clear
+  clear: both
   
-  b
-    display: block
+.hide
+  display: none
 
-.success
-  background: #33dd33
-  color: #fff
-  display: inline-block
-  padding: 30px 40px
+#header
+  padding: 20px 0
 
-  h2
-    margin: 3px 0
+  #logo
+    float: left
+    font-weight: bold
 
-.error
-  background: #dd6666
-  color: #fff
-  display: inline-block
-  padding: 30px 40px
-
-  h2
-    margin: 3px 0
+  nav
+    float: right

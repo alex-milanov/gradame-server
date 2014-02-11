@@ -1,1 +1,40 @@
-signals
+<div class="block">
+    <form action="">
+        <input type="text" value="Плачковица, София България" placeholder="Намери подадени сигнали по адрес" /> <button>Покажи</button>
+
+        <div style="float: right">
+            231 резултата
+            <b>Типове:</b>
+            <label><input type="checkbox">Pothole</label>
+            <label><input type="checkbox">Graffiti</label>
+            <label><input type="checkbox">...</label>
+
+            <b>Статуси:</b>
+            <label><input type="checkbox">Open</label>
+            <label><input type="checkbox">acknowledged</label>
+            <label><input type="checkbox">Closed</label>
+            <label><input type="checkbox">...</label>
+        </div>
+    </form>
+</div>
+
+<div>
+    <div style="width: 30%; float: left; height: 500px">
+        <ul>
+            <li>
+                <img src="#" width="50" height="50" style="float: left; padding-right: 10px">
+                <b>Неработещ Светофар</b>
+                <br/>
+                Плачковива 1а, София
+                <br/>
+                12.10.2014, сигнализирано от Anton.T
+                [status]
+                <br/>
+                <a href="{{ url 'signal' }}23235235">повече</a>
+            </li>
+        </ul>
+    </div>
+    <div style="width: 70%; float: right; background: #eee; height: 500px">
+        google map
+    </div>
+</div>
