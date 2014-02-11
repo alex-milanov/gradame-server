@@ -6,6 +6,11 @@ var Schema = require('mongoose').Schema;
 
 module.exports = {
 
+    signalTypesSchema: {
+        type: String,
+        icon: String
+    },
+
     userSchema: {
         name: String,
         email: String,

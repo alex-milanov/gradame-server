@@ -15,7 +15,15 @@ exports.signals = function(req, res) {
 };
 
 exports.signal = function(req, res) {
-    res.render('signal', { id: req.params.id });
+
+    var q = db.Signal.findById(req.params.id);
+
+    q.exec(function(err, signal) {
+        res.render('signal', {
+            error: err,
+            signal: signal
+        });
+    });
 };
 
 exports.addSignal = function(req, res) {
@@ -39,7 +47,9 @@ exports.addSignal = function(req, res) {
                 lng: lng
             },
             description: description,
-            type: type
+            type: type,
+            author: req.user,
+            authorName: req.user.name
         });
 
         signal.save(function(err, signal) {
@@ -78,6 +88,63 @@ exports.addSignal = function(req, res) {
     } else {
         res.render('add-signal', { error: "required" });
     }
+};
+
+exports.addComment = function(req, res) {
+    var signalId = req.body.signal_id;
+
+    var photo = req.body.photo;
+    var comment = req.body.comment;
+    //TODO if action change status on signal
+    var action = req.body.action;
+
+    db.Signal.findById(signalId).exec(function(err, signal) {
+
+        var newComment = {
+            author: req.user,
+            authorName: req.user.name,
+            date: { type: Date, default: Date.now },
+            image: photo,
+            text: comment
+        }
+
+        signal.comments.push(newComment);
+        signal.save(function(err) {
+            res.redirect('back');
+        });
+    });
+};
+
+exports.voteup = function(req, res) {
+    var signal_id = req.params.id;
+
+    db.Signal.findById(signal_id).exec(function(err, signal) {
+
+        var thanks = {
+            author: req.user
+        }
+
+        signal.votes.push(thanks);
+        signal.save(function(err) {
+            res.redirect('back');
+        });
+    });
+};
+
+exports.thanks = function(req, res) {
+    var signal_id = req.params.id;
+
+    db.Signal.findById(signal_id).exec(function(err, signal) {
+
+        var voteup = {
+            author: req.user
+        }
+
+        signal.thanks.push(voteup);
+        signal.save(function(err) {
+            res.redirect('back');
+        });
+    });
 };
 
 exports.users = function(req, res) {

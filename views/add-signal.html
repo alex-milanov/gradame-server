@@ -21,12 +21,12 @@
         });
 
         google.maps.event.addListener(
-                marker,
-                'drag',
-                function() {
-                    document.getElementById('latInput').value = marker.position.lat().toFixed(8);
-                    document.getElementById('lngInput').value = marker.position.lng().toFixed(8);
-                }
+            marker,
+            'drag',
+            function() {
+                document.getElementById('latInput').value = marker.position.lat().toFixed(8);
+                document.getElementById('lngInput').value = marker.position.lng().toFixed(8);
+            }
         );
 
     }
@@ -34,17 +34,16 @@
     google.maps.event.addDomListener(window, 'load', initialize);
 
 </script>
-
 {{/extend}}
 
 <div id="map" style="background: #eee; height: 200px;">MAP</div>
 
 {{#if signal }}
-    {{ signal }}
+    <h1>Success: {{ signal }}</h1>
 {{/if}}
 
 {{#if error }}
-<h1>{{ error }}</h1>
+<h1>ERROR: {{ error }}</h1>
 {{/if}}
 
 <form action="" method="post" enctype="multipart/form-data">
