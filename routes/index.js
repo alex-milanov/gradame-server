@@ -3,11 +3,16 @@ var fs = require('fs');
 var md5 = require('../utils/md5');
 
 exports.index = function(req, res) {
-  res.render('index', { User: req.User });
+  res.render('index');
 };
 
 exports.signals = function(req, res) {
-    res.render('signals', { title: 'Express' });
+
+    var q = db.Signal.find().limit(10);
+
+    q.exec(function(err, signals) {
+        res.render('signals', { error: err, signals: signals });
+    });
 };
 
 exports.signal = function(req, res) {
@@ -15,18 +20,76 @@ exports.signal = function(req, res) {
 };
 
 exports.addSignal = function(req, res) {
-    res.render('add-signal', { title: 'Express' });
+
+    console.log(req);
+
+    var lat = req.body.lat;
+    var lng = req.body.lng;
+    var type = req.body.type;
+    var photo = req.files.photo;
+    var description = req.body.description;
+
+    if(lat && lng && type && description) {
+
+        var signal = new db.Signal({
+            location: {
+                lat: lat,
+                lng: lng
+            },
+            description: description,
+            type: type
+        });
+
+        signal.save(function(err, signal) {
+
+            if(err) {
+                res.render('add-signal', {
+                    error: err
+                });
+            }
+
+            if(photo) {
+                if(photo.size != 0) {
+                    var fileType = photo.type;
+
+                    if(fileType === 'image/gif' || fileType === 'image/jpeg' || fileType === 'image/jpg' || fileType === 'image/png') {
+                        fs.readFile(photo.path, function (err, data) {;
+                            var newPath = __dirname + "/../public/pictures/" + photo.name;
+                            fs.writeFile(newPath, data, function (err) {
+
+                            });
+                        });
+                    }
+                } else {
+                    res.render('add-signal', {
+                        signal: signal
+                    });
+                }
+            }
+        });
+    } else {
+        res.render('add-signal', {});
+    }
 };
 
 exports.users = function(req, res) {
-    res.render('users', { title: 'Express' });
+
+    var q = db.User.find().limit(10);
+
+    q.exec(function(err, users) {
+        res.render('users', { users: users, error: err });
+    });
 };
 
-exports.User = function(req, res) {
+exports.user = function(req, res) {
     var id = req.params.id;
+
     db.User.findById(id, function(err, user) {
+
+        db.Signal.find({'author' : user._id});
+
         res.render('user', {
-            User: user,
+            user: user,
             error: err
         });
     });

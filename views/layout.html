@@ -5,6 +5,7 @@
     <link rel="stylesheet" type="text/css" href="/assets/css/style.css">
     <script src="/assets/js/jquery-2.1.0.min.js"></script>
     <script src="/assets/js/app.js"></script>
+    {{{block "header"}}}
 </head>
 
 <body>
@@ -22,47 +23,53 @@
     </nav>
 
     {{#if user }}
-    <img src="/avatar/{{ user._id }}" width="50" height="50" alt=""/> {{ user.name }} ({{ user.email }}) <a href="{{ url 'logout' }}" class="button">logout</a>
+    <img src="/avatar/{{ user._id }}" width="20" height="20" alt=""/>
+    <a href="{{ url 'user' }}{{ user._id }}">{{ user.name }}</a>
+    <a href="{{ url 'logout' }}" class="button">logout</a>
     {{/if}}
 
     <div class="clear"></div>
 
-    <!-- login -->
-    <div class="block hide bg" id="login-panel">
-        <form action="/login/" method="post">
-            <label>
-                <b>Email:</b>
-                <input type="email" name="username" />
-            </label>
+    <div style="position: absolute; width: 1200px">
 
-            <label>
-                <b>Password:</b>
-                <input type="text" name="password" />
-            </label>
+        <!-- login -->
+        <div class="block hide bg" id="login-panel">
+            <form action="/login/" method="post">
+                <label>
+                    <b>Email:</b>
+                    <input type="email" name="username" />
+                </label>
 
-            <button>Login</button>
-        </form>
+                <label>
+                    <b>Password:</b>
+                    <input type="text" name="password" />
+                </label>
 
-        <a href="#" id="register-btn">Pегистрация</a>
-        <a href="#" id="lostpassword-btn">Забравена парола?</a>
-    </div>
+                <button>Login</button>
+            </form>
 
-    <!-- lost password -->
-    <div class="block hide bg" id="lostpassword-panel">
-        <form action="">
-            <input type="text" placeholder="your@email.com" />
-            <button>Изпрати</button>
-        </form>
-    </div>
+            <a href="#" id="register-btn">Pегистрация</a>
+            <a href="#" id="lostpassword-btn">Забравена парола?</a>
+        </div>
 
-    <!-- register -->
-    <div class="block hide bg" id="register-panel">
-        <form action="">
-            <input type="text" placeholder="your@email.com" />
-            <input type="password" placeholder="password" />
-            <input type="password" placeholder="retype password" />
-            <button>Регистрация</button>
-        </form>
+        <!-- lost password -->
+        <div class="block hide bg" id="lostpassword-panel">
+            <form action="">
+                <input type="text" placeholder="your@email.com" />
+                <button>Изпрати</button>
+            </form>
+        </div>
+
+        <!-- register -->
+        <div class="block hide bg" id="register-panel">
+            <form action="">
+                <input type="text" placeholder="your@email.com" />
+                <input type="password" placeholder="password" />
+                <input type="password" placeholder="retype password" />
+                <button>Регистрация</button>
+            </form>
+        </div>
+
     </div>
 </div>
 
@@ -70,8 +77,7 @@
     {{{ body }}}
 </div>
 
-
-
+<div class="clear"></div>
 
 <div id="footer" class="block">
 
@@ -87,7 +93,7 @@
             <a href="{{ url 'contacts' }}">За контакти</a>
         </nav>
 
-        <a href="#" style="float: right">Проект на obshtestvo.bg</a>
+        <a href="http://www.obshtestvo.bg" style="float: right">Проект на obshtestvo.bg</a>
     </div>
 </div>
 

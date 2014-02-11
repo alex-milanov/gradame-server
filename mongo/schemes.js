@@ -44,7 +44,8 @@ module.exports = {
             text: String
         } ],
         validated: Boolean,
-        validatedBy: { type: Schema.Types.ObjectId, ref: 'User' }
+        validatedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+        created: { type: Date, default: Date.now },
     },
 
     flaggedSchema: {

@@ -36,8 +36,15 @@ app.use(express.session({ secret: '3264ytgerw3454tr' }));
 app.use(passport.initialize());
 app.use(passport.session());
 
+//middleware for loged user
+app.use(function(req, res, next) {
+    res.locals.user = req.user;
+    next();
+});
+
 app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 // development only
 if ('development' == app.get('env')) {
@@ -54,11 +61,11 @@ urls([
     { pattern: "/",                 view: routes.index,             name: "index"},
     { pattern: "/logout/",          view: routes.logOut,            name: "logout"},
     { pattern: "/signals/",         view: routes.signals,           name: "signals"},
-    { pattern: "/signal/:id",       view: routes.signal,            name: "signal"},
-    { pattern: "/add-signal",       view: routes.addSignal,         name: "add-signal"},
+    { pattern: "/signals/:id",      view: routes.signal,            name: "signal"},
+    { pattern: "/add-signal",       view: routes.addSignal,         name: "add-signal", methods: ['post', 'get']},
     { pattern: "/users/",           view: routes.users,             name: "users"},
-    { pattern: "/users/:id",        view: routes.User,              name: "user", methods: []},
-    { pattern: "/register/",        view: routes.registerUser,      name: "register-user",  methods: ['post', 'get'] },
+    { pattern: "/users/:id",        view: routes.user,              name: "user", methods: []},
+    { pattern: "/register/",        view: routes.registerUser,      name: "register-user", methods: ['post', 'get'] },
     { pattern: "/faq/",             view: routes.faq,               name: "faq"},
     { pattern: "/about/",           view: routes.about,             name: "about"},
     { pattern: "/contacts/",        view: routes.contacts,          name: "contacts"},
@@ -107,13 +114,10 @@ passport.use(new LocalStrategy(
 ));
 
 passport.serializeUser(function(user, done) {
-    console.log('serializeUser');
-    console.log(user);
     done(null, user.id);
 });
 
 passport.deserializeUser(function(id, done) {
-    console.log('deserializeUser');
     db.User.findById(id, function(err, user) {
         done(err, user);
     });
@@ -121,9 +125,8 @@ passport.deserializeUser(function(id, done) {
 
 app.post('/login/',
     passport.authenticate('local', {
-        successRedirect: '/',
-        failureRedirect: '/login',
-        failureFlash: true })
+        successRedirect: 'back',
+        failureRedirect: 'back'})
 );
 
 // PASSPORT OAUTH2

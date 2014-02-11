@@ -18,23 +18,40 @@
     </form>
 </div>
 
+<hr/>
+
+{{#if error}}
+<div class="error">
+    <h2>ERRRRROR</h2>
+    <div>{{ error }}</div>
+</div>
+{{/if}}
+
+
 <div>
-    <div style="width: 30%; float: left; height: 500px">
+    <div style="width: 30%; float: left; height: 500px; overflow: scroll">
         <ul>
-            <li>
-                <img src="#" width="50" height="50" style="float: left; padding-right: 10px">
-                <b>Неработещ Светофар</b>
-                <br/>
-                Плачковива 1а, София
-                <br/>
-                12.10.2014, сигнализирано от Anton.T
-                [status]
-                <br/>
-                <a href="{{ url 'signal' }}23235235">повече</a>
-            </li>
+            {{#each signals}}
+                <li>
+                    <img src="{{ image }}" width="50" height="50" style="float: left; padding-right: 10px">
+                    <b>{{ type }}</b>
+                    <br/>
+                    address: {{ address }}
+                    <br/>
+                    location: {{ location }}
+                    <br/>
+
+                    {{ created }} сигнализирано от <a href="/users/{{ author }}">authorname: {{ authorName }}</a><br/>
+                    status:     {{ status }}
+                    <br/>
+                    <a href="{{ _id }}">повече</a>
+                </li>
+            {{/each}}
         </ul>
     </div>
     <div style="width: 70%; float: right; background: #eee; height: 500px">
         google map
     </div>
+
 </div>
+
