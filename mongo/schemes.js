@@ -25,7 +25,7 @@ module.exports = {
         description: String,
         location: {
             lat: String,
-            Lng: String
+            lng: String
         },
         address: String,
         status: String,

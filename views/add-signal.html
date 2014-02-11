@@ -39,16 +39,24 @@
 
 <div id="map" style="background: #eee; height: 200px;">MAP</div>
 
+{{#if signal }}
+    {{ signal }}
+{{/if}}
+
+{{#if error }}
+<h1>{{ error }}</h1>
+{{/if}}
+
 <form action="" method="post" enctype="multipart/form-data">
 
-    <input type="text" id="latInput" name="lat" value="42.674169" disabled /><br/>
-    <input type="text" id="lngInput" name="lng" value="23.327291" disabled /><br/><br/>
+    <input type="text" id="latInput" name="lat" value="42.674169" /><br/>
+    <input type="text" id="lngInput" name="lng" value="23.327291" /><br/><br/>
 
     Signal type:<br/>
     <select name="type">
-        <option>Pot</option>
-        <option>Lorem lipsumum</option>
-        <option>Other</option>
+        <option value="pot">Pot</option>
+        <option value="lorem lipsum">Lorem lipsumum</option>
+        <option value="other">Other</option>
     </select>
 
     <br/><br/>

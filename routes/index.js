@@ -7,7 +7,6 @@ exports.index = function(req, res) {
 };
 
 exports.signals = function(req, res) {
-
     var q = db.Signal.find().limit(10);
 
     q.exec(function(err, signals) {
@@ -20,16 +19,19 @@ exports.signal = function(req, res) {
 };
 
 exports.addSignal = function(req, res) {
-
-    console.log(req);
-
     var lat = req.body.lat;
     var lng = req.body.lng;
     var type = req.body.type;
     var photo = req.files.photo;
     var description = req.body.description;
 
-    if(lat && lng && type && description) {
+    console.log("lat: " + lat);
+    console.log("lng: " + lng);
+    console.log("type: " + type);
+    console.log("photo: " + photo);
+    console.log("description: " + description);
+
+    if(req.method == "POST") {
 
         var signal = new db.Signal({
             location: {
@@ -48,27 +50,33 @@ exports.addSignal = function(req, res) {
                 });
             }
 
-            if(photo) {
-                if(photo.size != 0) {
-                    var fileType = photo.type;
+            console.log(signal);
 
-                    if(fileType === 'image/gif' || fileType === 'image/jpeg' || fileType === 'image/jpg' || fileType === 'image/png') {
-                        fs.readFile(photo.path, function (err, data) {;
-                            var newPath = __dirname + "/../public/pictures/" + photo.name;
-                            fs.writeFile(newPath, data, function (err) {
+//            if(photo) {
+//                if(photo.size != 0) {
+//                    var fileType = photo.type;
+//
+//                    if(fileType === 'image/gif' || fileType === 'image/jpeg' || fileType === 'image/jpg' || fileType === 'image/png') {
+//                        fs.readFile(photo.path, function (err, data) {;
+//                            var newPath = __dirname + "/../public/pictures/" + photo.name;
+//                            fs.writeFile(newPath, data, function (err) {
+//
+//                            });
+//                        });
+//                    }
+//                } else {
+//                    res.render('add-signal', {
+//                        signal: signal
+//                    });
+//                }
+//            }
 
-                            });
-                        });
-                    }
-                } else {
-                    res.render('add-signal', {
-                        signal: signal
-                    });
-                }
-            }
+            res.render('add-signal', {
+                signal: signal
+            });
         });
     } else {
-        res.render('add-signal', {});
+        res.render('add-signal', { error: "required" });
     }
 };
 
