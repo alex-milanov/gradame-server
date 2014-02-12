@@ -238,14 +238,17 @@ exports.flagUser = function(req, res) {
 };
 
 exports.flagComment = function(req, res) {
-    var signal_id = req.params.id;
     var comment_id = req.params.comment_id;
     var reason = req.body.reason;
 
-
     db.Signal.find({ "comments": ObjectId(comment_id) }).exec(function(err, comment) {
-        console.log('err: ' + err);
-        console.log('comment: ' + comment);
+        var newFlag = db.Flagged({
+            targetType: "Comment",
+            _flagged: comment,
+            reason: reason
+        }).save(function(err) {
+            res.redirect('back');
+        });
     });
 };
 

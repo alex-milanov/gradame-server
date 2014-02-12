@@ -17,16 +17,6 @@
             map: map,
             draggable: false
         });
-
-        google.maps.event.addListener(
-                marker,
-                'drag',
-                function() {
-                    document.getElementById('latInput').value = marker.position.lat().toFixed(8);
-                    document.getElementById('lngInput').value = marker.position.lng().toFixed(8);
-                }
-        );
-
     }
 
     google.maps.event.addDomListener(window, 'load', initialize);
