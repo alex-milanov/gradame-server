@@ -1,13 +1,12 @@
 var db = require('../mongo/db');
-var fs = require('fs');
-var md5 = require('../utils/md5');
+var fileupload = require('../utils/upload').upload;
 
 exports.index = function(req, res) {
   res.render('index');
 };
 
 exports.signals = function(req, res) {
-    var q = db.Signal.find().limit(10);
+    var q = db.Signal.find().limit(10).sort('-created');
 
     q.exec(function(err, signals) {
         res.render('signals', { error: err, signals: signals });
@@ -27,19 +26,14 @@ exports.signal = function(req, res) {
 };
 
 exports.addSignal = function(req, res) {
-    var lat = req.body.lat;
-    var lng = req.body.lng;
-    var type = req.body.type;
-    var photo = req.files.photo;
-    var description = req.body.description;
-
-    console.log("lat: " + lat);
-    console.log("lng: " + lng);
-    console.log("type: " + type);
-    console.log("photo: " + photo);
-    console.log("description: " + description);
 
     if(req.method == "POST") {
+
+        var lat = req.body.lat;
+        var lng = req.body.lng;
+        var type = req.body.type;
+        var photo = req.files.photo;
+        var description = req.body.description;
 
         var signal = new db.Signal({
             location: {
@@ -60,33 +54,27 @@ exports.addSignal = function(req, res) {
                 });
             }
 
-            console.log(signal);
+            var publicFolder = "pictures";
+            fileupload(photo.name, publicFolder, photo, function(err, image_url) {
 
-//            if(photo) {
-//                if(photo.size != 0) {
-//                    var fileType = photo.type;
-//
-//                    if(fileType === 'image/gif' || fileType === 'image/jpeg' || fileType === 'image/jpg' || fileType === 'image/png') {
-//                        fs.readFile(photo.path, function (err, data) {;
-//                            var newPath = __dirname + "/../public/pictures/" + photo.name;
-//                            fs.writeFile(newPath, data, function (err) {
-//
-//                            });
-//                        });
-//                    }
-//                } else {
-//                    res.render('add-signal', {
-//                        signal: signal
-//                    });
-//                }
-//            }
+                if(err) {
+                    res.render('add-signal', {
+                        error: err
+                    });
+                } else {
+                    signal.image = image_url;
+                }
 
-            res.render('add-signal', {
-                signal: signal
+                signal.save(function(err, signal) {
+                    res.render('add-signal', {
+                        error: err,
+                        signal: signal
+                    });
+                });
             });
         });
     } else {
-        res.render('add-signal', { error: "required" });
+        res.render('add-signal');
     }
 };
 
@@ -149,7 +137,7 @@ exports.thanks = function(req, res) {
 
 exports.users = function(req, res) {
 
-    var q = db.User.find().limit(10);
+    var q = db.User.find().limit(10).sort('-registerAt');
 
     q.exec(function(err, users) {
         res.render('users', { users: users, error: err });
@@ -159,13 +147,14 @@ exports.users = function(req, res) {
 exports.user = function(req, res) {
     var id = req.params.id;
 
-    db.User.findById(id, function(err, user) {
+    db.User.findById(id, function(err, _user) {
 
-        db.Signal.find({'author' : user._id});
-
-        res.render('user', {
-            user: user,
-            error: err
+        db.Signal.find({'author' : _user._id}).limit(3).sort('-created').exec(function(err, signals) {
+            res.render('user', {
+                user: _user,
+                signals: signals,
+                error: err
+            });
         });
     });
 };
@@ -231,4 +220,46 @@ exports.registerUser = function(req, res) {
     } else {
         res.render('register-User');
     }
+};
+
+exports.flagUser = function(req, res) {
+    var user_id = req.params.id;
+    var reason = req.body.reason;
+
+    db.User.findById(user_id).exec(function(err, user) {
+        var newFlag = db.Flagged({
+            targetType: "User",
+            _flagged: user,
+            reason: reason
+        }).save(function(err) {
+            res.redirect('back');
+        });
+    });
+};
+
+exports.flagComment = function(req, res) {
+    var signal_id = req.params.id;
+    var comment_id = req.params.comment_id;
+    var reason = req.body.reason;
+
+
+    db.Signal.find({ "comments": ObjectId(comment_id) }).exec(function(err, comment) {
+        console.log('err: ' + err);
+        console.log('comment: ' + comment);
+    });
+};
+
+exports.flagSignal = function(req, res) {
+    var signal_id = req.params.id;
+    var reason = req.body.reason;
+
+    db.Signal.findById(signal_id).exec(function(err, signal) {
+        var newFlag = db.Flagged({
+            targetType: "Signal",
+            _flagged: signal,
+            reason: reason
+        }).save(function(err) {
+                res.redirect('back');
+        });
+    });
 };

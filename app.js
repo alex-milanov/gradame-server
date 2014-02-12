@@ -58,22 +58,25 @@ api.init(app);
 // ---------------------------------------------------------
 
 urls([
-    { pattern: "/",                 view: routes.index,             name: "index"},
-    { pattern: "/logout/",          view: routes.logOut,            name: "logout"},
-    { pattern: "/signals/",         view: routes.signals,           name: "signals"},
-    { pattern: "/signals/:id",      view: routes.signal,            name: "signal"},
-    { pattern: "/signals/:id/thanks",      view: routes.thanks,     name: "thanks", methods: ['post']},
-    { pattern: "/signals/:id/voteup",      view: routes.voteup,     name: "voteup", methods: ['post']},
-    { pattern: "/signals/:id/comment",     view: routes.addComment, name: "comment", methods: ['post']},
-    { pattern: "/add-signal",       view: routes.addSignal,         name: "add-signal", methods: ['post', 'get']},
-    { pattern: "/users/",           view: routes.users,             name: "users"},
-    { pattern: "/users/:id",        view: routes.user,              name: "user", methods: []},
-    { pattern: "/register/",        view: routes.registerUser,      name: "register-user", methods: ['post', 'get'] },
-    { pattern: "/faq/",             view: routes.faq,               name: "faq"},
-    { pattern: "/about/",           view: routes.about,             name: "about"},
-    { pattern: "/contacts/",        view: routes.contacts,          name: "contacts"},
-    { pattern: "/for-developers/",  view: routes.forDevelopers,     name: "for-developers"},
-    { pattern: "/for-authorities/", view: routes.forАuthorities,    name: "for-authorities"}
+    { pattern: "/", view: routes.index, name: "index"},
+    { pattern: "/logout/", view: routes.logOut, name: "logout"},
+    { pattern: "/signals/", view: routes.signals, name: "signals"},
+    { pattern: "/signals/:id", view: routes.signal, name: "signal"},
+    { pattern: "/signals/:id/thanks", view: routes.thanks, name: "thanks", methods: ['post']},
+    { pattern: "/signals/:id/voteup", view: routes.voteup, name: "voteup", methods: ['post']},
+    { pattern: "/signals/:id/comment", view: routes.addComment, name: "comment", methods: ['post']},
+    { pattern: "/add-signal", view: routes.addSignal, name: "add-signal", methods: ['post', 'get']},
+    { pattern: "/users/", view: routes.users, name: "users"},
+    { pattern: "/users/:id", view: routes.user, name: "user", methods: []},
+    { pattern: "/register/", view: routes.registerUser, name: "register-user", methods: ['post', 'get'] },
+    { pattern: "/faq/", view: routes.faq, name: "faq"},
+    { pattern: "/about/", view: routes.about, name: "about"},
+    { pattern: "/contacts/", view: routes.contacts, name: "contacts"},
+    { pattern: "/for-developers/", view: routes.forDevelopers, name: "for-developers"},
+    { pattern: "/for-authorities/", view: routes.forАuthorities, name: "for-authorities"},
+    { pattern: "/signals/:id/flag", view: routes.flagSignal, name: "flag-signal", methods: ['post']},
+    { pattern: "/signals/:id/comments/:comment_id/flag", view: routes.flagComment, name: "flag-comment", methods: ['post']},
+    { pattern: "/users/:id/flag", view: routes.flagUser, name: "flag-comment", methods: ['post']}
 ], app);
 
 

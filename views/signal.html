@@ -15,7 +15,7 @@
         var marker = new google.maps.Marker({
             position: map.getCenter(),
             map: map,
-            draggable: true
+            draggable: false
         });
 
         google.maps.event.addListener(
@@ -69,7 +69,7 @@
     <div id="map" style="float: right; width: 600px; height: 300px; background: #eee">MAP & MARKER</div>
 
     <div>
-        <img src="{{ signal.picture }}" style="background: #eee;" width="390" height="270">
+        <img src="{{ signal.image }}" style="background: #eee;" width="390" height="270">
         <div>address: {{ signal.address }}</div>
 
         <br/>
@@ -83,10 +83,10 @@
 
         <br/><br/>
 
-        <input type="text" name="flag_reason" placeholder="reason to flag" />
-        <input type="text" value="Signal" name="type" />
-        <input type="text" value="id" name="{{ signal._id }}" />
-        <button>Flag</button>
+        <form action="/signals/{{ signal._id }}/flag" method="post">
+            <input type="text" name="flag_reason" placeholder="reason to flag" />
+            <button>Flag</button>
+        </form>
 
         <br/><br/>
 
@@ -105,10 +105,11 @@
                 <b><a href="/users/{{ author }}"> {{ authorName }} - id: {{ author }} </a></b>
                 <p>{{ text }}</p>
                 {{ date }} <br/>
-                <input type="text" name="flag_reason" placeholder="reason to flag" />
-                <input type="text" name="type" value="Comment"  />
-                <input type="text" name="id" value="{{ _id }}" />
-                <a href="#">Flag</a>
+
+                <form action="/signals/{{../signal._id}}/comments/{{_id}}/flag" method="post">
+                    <input type="text" name="reason" placeholder="reason to flag" />
+                    <button>Flag</button>
+                </form>
             </div>
             <div class="clear"></div>
             <br/>

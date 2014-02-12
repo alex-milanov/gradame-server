@@ -12,7 +12,12 @@
         <h1 style="margin-top: 0; padding-top: 0; width: 500px;"> {{ user.name }} <a href="#">Edit</a></h1>
 
         {{ user.email }} (private)
-        <a href="#">flag</a>
+
+        <form action="/users/{{ user._id }}/flag" method="post">
+            <input type="text" name="flag_reason" placeholder="reason to flag" />
+            <button>Flag</button>
+        </form>
+
     </div>
 
     <div style="float: right">
@@ -26,15 +31,22 @@
 <hr/>
 
 <h2>ПОСЛЕДНИ 3 СИГНАЛА</h2>
+
 <ul>
+    {{#each signals}}
     <li>
-        <img src="#" width="320" height="180" style="background: #333;" />
+        <img src="{{ image }}" width="50" height="50" style="float: left; padding-right: 10px">
+        <b>{{ type }}</b>
         <br/>
-        <h3>Road blockage</h3>
-        <strong>address goes here</strong>
-        <p>
-            DESCRIPTION
-            No description provided.
-        </p>
+        address: {{ address }}
+        <br/>
+        location: {{ location }}
+        <br/>
+
+        {{ created }}
+        status:     {{ status }}
+        <br/>
+        <a href="/signals/{{ _id }}">повече</a>
     </li>
+    {{/each}}
 </ul>

@@ -50,7 +50,7 @@ module.exports = {
         } ],
         validated: Boolean,
         validatedBy: { type: Schema.Types.ObjectId, ref: 'User' },
-        created: { type: Date, default: Date.now },
+        created: { type: Date, default: Date.now }
     },
 
     flaggedSchema: {
