@@ -8,7 +8,8 @@ module.exports = {
 
     signalTypesSchema: {
         type: String,
-        icon: String
+        icon: String,
+        thumbnail: String
     },
 
     userSchema: {
@@ -45,12 +46,14 @@ module.exports = {
             author: { type: Schema.Types.ObjectId, ref: 'User' },
             authorName: String,
             date: { type: Date, default: Date.now },
+            updatedAd: Date,
             image: String,
             text: String
         } ],
         validated: Boolean,
         validatedBy: { type: Schema.Types.ObjectId, ref: 'User' },
-        created: { type: Date, default: Date.now }
+        created: { type: Date, default: Date.now },
+        updated: Date
     },
 
     flaggedSchema: {
