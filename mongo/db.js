@@ -25,5 +25,6 @@ module.exports = {
 
     User: mongoose.model('User', schemas.userSchema),
     Flagged: mongoose.model('Flagged', schemas.flaggedSchema),
-    Signal: mongoose.model('Signal', schemas.signalSchema)
+    Signal: mongoose.model('Signal', schemas.signalSchema),
+    SignalType: mongoose.model('SignalType', schemas.signalTypesSchema)
 };

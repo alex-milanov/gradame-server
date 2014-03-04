@@ -29,10 +29,7 @@ module.exports = {
         author: { type: Schema.Types.ObjectId, ref: 'User' },
         authorName: String,
         description: String,
-        location: {
-            lat: String,
-            lng: String
-        },
+        location: { type: [Number], index: '2dsphere' },
         address: String,
         status: String,
         image: String,

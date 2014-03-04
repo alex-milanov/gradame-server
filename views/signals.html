@@ -14,7 +14,7 @@
 
         {{#each signals}}
             new google.maps.Marker({
-                position: new google.maps.LatLng({{ location.lat }}, {{ location.lng }}),
+                position: new google.maps.LatLng({{ location }}, {{ location }}),
                 map: map,
                 draggable: false
             });

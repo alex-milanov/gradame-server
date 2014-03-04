@@ -36,10 +36,7 @@ exports.addSignal = function(req, res) {
         var description = req.body.description;
 
         var signal = new db.Signal({
-            location: {
-                lat: lat,
-                lng: lng
-            },
+            location: [lat, lng],
             description: description,
             type: type,
             author: req.user,
@@ -124,11 +121,11 @@ exports.thanks = function(req, res) {
 
     db.Signal.findById(signal_id).exec(function(err, signal) {
 
-        var voteup = {
+        var thanks = {
             author: req.user
         }
 
-        signal.thanks.push(voteup);
+        signal.thanks.push(thanks);
         signal.save(function(err) {
             res.redirect('back');
         });
