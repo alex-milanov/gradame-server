@@ -395,7 +395,7 @@ function initApp(app) {
       if(err) {
         res.send({error: err});
         return false;
-      };
+      }
 
       if(lat && lng) {
         signal.location = [lat, lng];
@@ -423,7 +423,7 @@ function initApp(app) {
         if(err) {
           res.send({error: err});
           return false;
-        };
+        }
 
         res.send(signal);
       })
@@ -435,17 +435,44 @@ function initApp(app) {
   // 7. Delete signal
   // ===============================================
   app.delete(signalUrl, function (req, res) {
-    res.send('Delete signal');
+    var signalId = req.params.id;
+
+    db.Signal.findByIdAndRemove(signalId, function(err, signal) {
+      if(err) {
+        res.send({error: err});
+        return false;
+      }
+
+      if(!signal) {
+        res.send({error: 'No Signal with this id.'});
+        return false;
+      }
+
+      res.send(signal);
+    });
   });
 
   // ===============================================
   // 8. Get users
   // ===============================================
   app.get(usersUrl, function (req, res) {
+    var limit = req.query.limit || defaultLimit;
+    var offset = req.query.offset || defaultOffset;
+    var sort = req.query.sort; // '-type date'
+    var fields = 'type location description author status';
+
+    if(req.query.fields) {
+      fields = req.query.fields.replace(/,/g, ' ');
+    }
+
     q = db.User.find();
-    q.limit(defaultLimit);
-    q.skip(defaultOffset);
-    q.select('name registerAt validated');
+    q.limit(limit);
+    q.skip(offset);
+    q.select(fields);
+
+    if(sort) {
+      q.sort(sort);
+    }
 
     var metadata = metadata = {
       per_page: '',
@@ -455,7 +482,12 @@ function initApp(app) {
       total_count: ''
     };
 
-    q.exec(function (err, entities) {
+    q.exec(function(err, entities) {
+      if (err) {
+        res.send({error: err});
+        return false;
+      }
+
       //adds _url to the data
       if (entities) {
         for (var i = 0; i < entities.length; i++) {
@@ -464,16 +496,10 @@ function initApp(app) {
         }
       }
 
-      var response = {
+      res.send({
         metadata: metadata,
-        data: entities ? entities : {}
-      };
-
-      if (err) {
-        response.error = err;
-      }
-
-      res.send(response);
+        data: entities ? entities : []
+      });
     });
   });
 
@@ -481,7 +507,48 @@ function initApp(app) {
   // 9. Add user
   // ===============================================
   app.post(usersUrl, function (req, res) {
-    res.send('login');
+    var email = req.body.email;
+    var password = req.body.password;
+    var name = req.body.name || '';
+
+    if(!email) {
+      response.error = err;
+      return false;
+    }
+
+      var newUser = db.User({
+        name: req.body.name,
+        email: req.body.email,
+        password: req.body.password
+      }).save(function(err, user) {
+
+          if(!err) {
+            var success = err ? false : true;
+
+            if(req.files.avatar.size != 0) {
+              var fileType = req.files.avatar.type;
+
+              if(fileType === 'image/gif' || fileType === 'image/jpeg' || fileType === 'image/jpg' || fileType === 'image/png') {
+                fs.readFile(req.files.avatar.path, function (err, data) {;
+                  var newPath = __dirname + "/../public/avatar/" + user._id;
+                  fs.writeFile(newPath, data, function (err) {
+                    console.log(err);
+                    console.log('uploaded');
+                  });
+                });
+              }
+            }
+          }
+
+          res.render('register-User', {
+            User: user,
+            error: err,
+            success: success
+          });
+        });
+    } else {
+      res.render('register-User');
+    }
   });
 
   // ===============================================
