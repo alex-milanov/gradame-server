@@ -396,7 +396,7 @@ function initApp(app) {
     var limit = req.query.limit || defaultLimit;
     var offset = req.query.offset || defaultOffset;
     var sort = req.query.sort; // '-type date'
-    var fields = 'type location description author status';
+    var fields = '';
 
     if (req.query.fields) {
       fields = req.query.fields.replace(/,/g, ' ');
@@ -423,10 +423,12 @@ function initApp(app) {
       utils.returnErrorIf(err, err, res);
 
       //adds _url to the data
-      if (entities) {
+      if(entities) {
         for (var i = 0; i < entities.length; i++) {
           entities[i] = entities[i].toObject();
           entities[i]._url = usersUrl + '/' + entities[i]._id;
+          delete entities[i].__v;
+          delete entities[i].password;
         }
       }
 
@@ -587,6 +589,29 @@ function initApp(app) {
   // 16. Flag user
   // ===============================================
   app.post(flagUserUrl, function (req, res) {
+    var userId = req.params.id;
+    var reason = req.body.reason;
+
+    utils.returnErrorIf(!reason, 'Please provide a reason.', res);
+
+    db.User.findById(userId, function(err, user) {
+      utils.returnErrorIf(err, err, res);
+      utils.returnErrorIf(!user, 'No user with this id.', res);
+
+      var newFlag = new db.Flagged({
+        targetType: "User",
+        reason: reason,
+        _flagged: user
+      });
+
+      newFlag.save(function (err, flag) {
+        utils.returnErrorIf(err, err, res);
+
+        var flag = flag.toObject();
+        delete flag.__v;
+        res.send(flag);
+      });
+    });
   });
 
   // ===============================================
