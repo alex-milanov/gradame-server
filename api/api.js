@@ -550,7 +550,29 @@ function initApp(app) {
   // 10. Get user
   // ===============================================
   app.get(userUrl, function (req, res) {
-    res.send('login');
+    var userId = req.params.id;
+    var fields = '';
+
+    if(req.query.fields) {
+      fields = req.query.fields.replace(/,/g, ' ');
+    }
+
+    db.User.findById(userId, fields, function(err, user) {
+      if(err) {
+        res.send({error: err});
+        return false;
+      }
+
+      if(!user) {
+        res.send({error: 'No user with this id.'});
+        return false;
+      }
+
+      user = user.toObject();
+      delete user.__v;
+
+      res.send(user);
+    });
   });
 
   // ===============================================
