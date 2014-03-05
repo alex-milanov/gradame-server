@@ -266,7 +266,74 @@ function initApp(app) {
   // 4. Add signal
   // ===============================================
   app.post(signalsUrl, function (req, res) {
-    res.send('login');
+    //TODO Add author from token
+
+    var lat = req.body.lat;
+    var lng = req.body.lng;
+    var type = req.body.type;
+    var photo = req.files.photo;
+    var description = req.body.description || '';
+
+    if(!lat) {
+      res.send({error: "Please provide geo lat."});
+      return false;
+    }
+    if(!lng) {
+      res.send({error: "Please provide geo lng."});
+      return false;
+    }
+    if(!type) {
+      res.send({error: "Please provide a signal type."});
+      return false;
+    }
+
+    var signal = new db.Signal({
+      location: [lat, lng],
+      description: description,
+      type: type
+      //author: req.user,
+      //authorName: req.user.name
+    });
+
+    signal.save(function (err, signal) {
+
+      if (err) {
+        res.send({error: err});
+        return false;
+      }
+
+      if (!photo) {
+        var signalObj = signal.toObject();
+        delete signalObj.__v;
+        signalObj._url = signalsUrl + '/' + signalObj._id;
+
+        res.send({data: signalObj});
+      } else {
+        var publicFolder = "pictures";
+        fileupload(photo.name, publicFolder, photo, function (err, image_url) {
+
+          if (err) {
+            res.send({error: err});
+            return false;
+          }
+          signal.image = image_url;
+
+          signal.save(function (err, signal) {
+            if (err) {
+              res.send({error: err});
+              return false;
+            }
+
+            var signalObj = signal.toObject();
+            delete signalObj.__v;
+            signalObj._url = signalsUrl + '/' + signalObj._id;
+
+            res.send({data: signalObj});
+          });
+        });
+      }
+    });
+
   });
 
   // ===============================================
