@@ -13,7 +13,7 @@ function initApp(app) {
     commentUrl = apiBaseUrl + 'signals/:id/comments/:comment_id',
     flagUserUrl = apiBaseUrl + 'users/:id/flag',
     flagCommentUrl = apiBaseUrl + 'signals/:id/comments/:comment_id/flag',
-    flagSignalUrl = apiBaseUrl + 'api/signals/:id/flag',
+    flagSignalUrl = apiBaseUrl + 'signals/:id/flag',
     voteUpSignalUrl = apiBaseUrl + 'signals/:id/voteup',
     sayThanksUrl = apiBaseUrl + 'signals/:id/saythanks';
 
@@ -589,6 +589,8 @@ function initApp(app) {
   // 16. Flag user
   // ===============================================
   app.post(flagUserUrl, function (req, res) {
+
+    //TODO - Add flag author - requesting user
     var userId = req.params.id;
     var reason = req.body.reason;
 
@@ -618,6 +620,7 @@ function initApp(app) {
   // 17. flag comment
   // ===============================================
   app.post(flagCommentUrl, function (req, res) {
+    //TODO - Add flag author - requesting user
     var signalId = req.params.id;
     var commentId = req.params.comment_id;
     var reason = req.body.reason;
@@ -654,7 +657,31 @@ function initApp(app) {
   // 18. flag signal
   // ===============================================
   app.post(flagSignalUrl, function (req, res) {
-    res.send('login');
+    //TODO - Add flag author - requesting user
+    var signalId = req.params.id;
+    var reason = req.body.reason;
+
+    utils.returnErrorIf(!reason, 'Please provide a reason.', res);
+
+    db.Signal.findById(signalId, function(err, signal) {
+      utils.returnErrorIf(err, err, res);
+      utils.returnErrorIf(!signal, 'No signal with this id.', res);
+
+      var newFlag = new db.Flagged({
+        targetType: "Signal",
+        reason: reason,
+        _flagged: signal
+      });
+
+      newFlag.save(function (err, flag) {
+        utils.returnErrorIf(err, err, res);
+
+        var flag = flag.toObject();
+        delete flag.__v;
+        res.send(flag);
+      });
+    });
+
   });
 
   // ===============================================
