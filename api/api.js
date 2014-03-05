@@ -111,6 +111,15 @@ function initApp(app) {
     res.send(endPoints);
   });
 
+  var utils = {
+    returnErrorIf: function(bool, reason, res) {
+      if(bool) {
+        res.send({error: reason});
+        return false;
+      }
+    }
+  };
+
   // ===============================================
   // 1. Login
   // ===============================================
@@ -119,37 +128,21 @@ function initApp(app) {
     var email = req.body.email;
     var password = req.body.password;
 
-    if (!token) {
-      res.send({error: 'API key is missing.'});
-      return false;
-    }
-    if (!email) {
-      res.send({error: 'Please provide username.'});
-      return false;
-    }
-    if (!password) {
-      res.send({error: 'Please provide password.'});
-      return false;
-    }
+    utils.returnErrorIf(!token, 'API key is missing.', res);
+    utils.returnErrorIf(!email, 'Please provide username.', res);
+    utils.returnErrorIf(!password, 'Please provide password.', res);
 
     var fields = '_id name email registerAt';
 
-    try {
-      db.User.findOne({email: email, password: password}, fields, function(err, user) {
-        if (user) {
-          res.send(user);
-        } else {
-          res.send({error: 'Incorrect username or password.'});
-        }
+    db.User.findOne({email: email, password: password}, fields, function(err, user) {
+      if (user) {
+        res.send(user);
+      } else {
+        res.send({error: 'Incorrect username or password.'});
+      }
 
-        if (err) {
-          res.send({error: err});
-          return false;
-        };
-      });
-    } catch (err) {
-      res.send({error: err});
-    }
+      utils.returnErrorIf(err, err, res);
+    });
   });
 
   // ===============================================
@@ -172,10 +165,7 @@ function initApp(app) {
           res.send({});
         }
 
-        if (err) {
-          res.send({error: err});
-          return false;
-        };
+        utils.returnErrorIf(err, err, res);
       });
     } catch (err) {
       res.send({error: err});
@@ -186,7 +176,6 @@ function initApp(app) {
   // 3. Get signals
   // ===============================================
   app.get(signalsUrl, function (req, res) {
-    try {
       var limit = req.query.limit || defaultLimit;
       var offset = req.query.offset || defaultOffset;
       var sort = req.query.sort; // '-type date'
@@ -259,16 +248,10 @@ function initApp(app) {
           data: entities ? entities : []
         };
 
-        if(err) {
-          res.send({error: err});
-          return false;
-        };
+        utils.returnErrorIf(err, err, res);
 
         res.send(response);
       });
-    } catch (err) {
-      res.send({error: err});
-    }
   });
 
   // ===============================================
@@ -284,22 +267,10 @@ function initApp(app) {
     var description = req.body.description || '';
     var address = req.files.address;
 
-    if(!lat) {
-      res.send({error: "Please provide geo lat."});
-      return false;
-    }
-    if(!lng) {
-      res.send({error: "Please provide geo lng."});
-      return false;
-    }
-    if(!type) {
-      res.send({error: "Please provide a signal type."});
-      return false;
-    }
-    if(!address) {
-      res.send({error: "Please provide a signal address."});
-      return false;
-    }
+    utils.returnErrorIf(!lat, "Please provide geo lat.", res);
+    utils.returnErrorIf(!lng, "Please provide geo lng.", res);
+    utils.returnErrorIf(!type, "Please a signal type.", res);
+    utils.returnErrorIf(!address, "Please provide a signal type.", res);
 
     var signal = new db.Signal({
       location: [lat, lng],
@@ -312,10 +283,7 @@ function initApp(app) {
 
     signal.save(function (err, signal) {
 
-      if (err) {
-        res.send({error: err});
-        return false;
-      }
+      utils.returnErrorIf(err, err, res);
 
       if (!photo) {
         var signalObj = signal.toObject();
@@ -326,18 +294,12 @@ function initApp(app) {
       } else {
         var publicFolder = "pictures";
         fileupload(photo.name, publicFolder, photo, function (err, image_url) {
+          utils.returnErrorIf(err, err, res);
 
-          if (err) {
-            res.send({error: err});
-            return false;
-          }
           signal.image = image_url;
 
           signal.save(function (err, signal) {
-            if (err) {
-              res.send({error: err});
-              return false;
-            }
+            utils.returnErrorIf(err, err, res);
 
             var signalObj = signal.toObject();
             delete signalObj.__v;
@@ -363,16 +325,8 @@ function initApp(app) {
     }
 
     db.Signal.findById(signalId, fields, function(err, signal) {
-      if(err) {
-        res.send({error: err});
-        return false;
-      };
-
-      if(!signal) {
-        res.send({error: 'No signal with this Id'});
-        return false;
-      };
-
+      utils.returnErrorIf(err, err, res);
+      utils.returnErrorIf(!signal, 'No signal with this Id', res);
       res.send(signal);
     });
   });
@@ -392,10 +346,7 @@ function initApp(app) {
     var validated = req.body.validated;
 
     db.Signal.findById(signalId, function(err, signal) {
-      if(err) {
-        res.send({error: err});
-        return false;
-      }
+      utils.returnErrorIf(err, err, res);
 
       if(lat && lng) {
         signal.location = [lat, lng];
@@ -420,10 +371,7 @@ function initApp(app) {
       signal.updated = new Date();
 
       signal.save(function(err, signal) {
-        if(err) {
-          res.send({error: err});
-          return false;
-        }
+        utils.returnErrorIf(err, err, res);
 
         res.send(signal);
       })
@@ -438,16 +386,8 @@ function initApp(app) {
     var signalId = req.params.id;
 
     db.Signal.findByIdAndRemove(signalId, function(err, signal) {
-      if(err) {
-        res.send({error: err});
-        return false;
-      }
-
-      if(!signal) {
-        res.send({error: 'No Signal with this id.'});
-        return false;
-      }
-
+      utils.returnErrorIf(err, err, res);
+      utils.returnErrorIf(!signal, 'No signal with this Id', res);
       res.send(signal);
     });
   });
@@ -483,10 +423,7 @@ function initApp(app) {
     };
 
     q.exec(function(err, entities) {
-      if (err) {
-        res.send({error: err});
-        return false;
-      }
+      utils.returnErrorIf(err, err, res);
 
       //adds _url to the data
       if (entities) {
@@ -511,15 +448,7 @@ function initApp(app) {
     var password = req.body.password;
     var name = req.body.name || '';
 
-    if(!email) {
-      res.send({error: 'Please provide an email.'});
-      return false;
-    }
-
-    if(!password) {
-      res.send({error: 'Please provide a password.'});
-      return false;
-    }
+    utils.returnErrorIf(!email, 'Please provide an email.', res);
 
     var newUser = new db.User({
       name: name,
@@ -528,16 +457,8 @@ function initApp(app) {
     });
 
     newUser.save(function(err, user) {
-      if(err) {
-
-        if(err.code === 11000) {
-          res.send({error: 'This email is already registered, please choose another one.'});
-          return false;
-        }
-
-        res.send({error: err});
-        return false;
-      }
+      utils.returnErrorIf(err.code === 11000, 'This email is already registered, please choose another one.', res);
+      utils.returnErrorIf(err, err, res);
 
       user = user.toObject();
       delete user.__v;
@@ -558,15 +479,8 @@ function initApp(app) {
     }
 
     db.User.findById(userId, fields, function(err, user) {
-      if(err) {
-        res.send({error: err});
-        return false;
-      }
-
-      if(!user) {
-        res.send({error: 'No user with this id.'});
-        return false;
-      }
+      utils.returnErrorIf(err, err, res);
+      utils.returnErrorIf(user, 'No user with this id., res');
 
       user = user.toObject();
       delete user.__v;
@@ -579,6 +493,7 @@ function initApp(app) {
   // 11. Update user
   // ===============================================
   app.put(userUrl, function (req, res) {
+    //TODO update user - change password, avatar image
     res.send('login');
   });
 
@@ -589,15 +504,8 @@ function initApp(app) {
     var userId = req.params.id;
 
     db.User.findByIdAndRemove(userId, function(err, user) {
-      if(err) {
-        res.send({error: err});
-        return false;
-      }
-
-      if(!user) {
-        res.send({error: 'No user with this id.'});
-        return false;
-      }
+      utils.returnErrorIf(err, err, res);
+      utils.returnErrorIf(user, 'No user with this id., res');
 
       user = user.toObject();
       delete user.__v;
