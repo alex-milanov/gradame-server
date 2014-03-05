@@ -512,43 +512,38 @@ function initApp(app) {
     var name = req.body.name || '';
 
     if(!email) {
-      response.error = err;
+      res.send({error: 'Please provide an email.'});
       return false;
     }
 
-      var newUser = db.User({
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password
-      }).save(function(err, user) {
-
-          if(!err) {
-            var success = err ? false : true;
-
-            if(req.files.avatar.size != 0) {
-              var fileType = req.files.avatar.type;
-
-              if(fileType === 'image/gif' || fileType === 'image/jpeg' || fileType === 'image/jpg' || fileType === 'image/png') {
-                fs.readFile(req.files.avatar.path, function (err, data) {;
-                  var newPath = __dirname + "/../public/avatar/" + user._id;
-                  fs.writeFile(newPath, data, function (err) {
-                    console.log(err);
-                    console.log('uploaded');
-                  });
-                });
-              }
-            }
-          }
-
-          res.render('register-User', {
-            User: user,
-            error: err,
-            success: success
-          });
-        });
-    } else {
-      res.render('register-User');
+    if(!password) {
+      res.send({error: 'Please provide a password.'});
+      return false;
     }
+
+    var newUser = new db.User({
+      name: name,
+      email: email,
+      password: password
+    });
+
+    newUser.save(function(err, user) {
+      if(err) {
+
+        if(err.code === 11000) {
+          res.send({error: 'This email is already registered, please choose another one.'});
+          return false;
+        }
+
+        res.send({error: err});
+        return false;
+      }
+
+      user = user.toObject();
+      delete user.__v;
+
+      res.send(user);
+    });
   });
 
   // ===============================================
