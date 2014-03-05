@@ -586,7 +586,24 @@ function initApp(app) {
   // 12. Delete user
   // ===============================================
   app.delete(userUrl, function (req, res) {
-    res.send('login');
+    var userId = req.params.id;
+
+    db.User.findByIdAndRemove(userId, function(err, user) {
+      if(err) {
+        res.send({error: err});
+        return false;
+      }
+
+      if(!user) {
+        res.send({error: 'No user with this id.'});
+        return false;
+      }
+
+      user = user.toObject();
+      delete user.__v;
+
+      res.send(user);
+    })
   });
 
   // ===============================================
