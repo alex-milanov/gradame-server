@@ -108,8 +108,8 @@ function initApp(app) {
   });
 
   var utils = {
-    returnErrorIf: function(bool, reason, res) {
-      if(bool) {
+    returnErrorIf: function (bool, reason, res) {
+      if (bool) {
         res.send({error: reason});
         return false;
       }
@@ -130,7 +130,7 @@ function initApp(app) {
 
     var fields = '_id name email registerAt';
 
-    db.User.findOne({email: email, password: password}, fields, function(err, user) {
+    db.User.findOne({email: email, password: password}, fields, function (err, user) {
       if (user) {
         res.send(user);
       } else {
@@ -172,82 +172,82 @@ function initApp(app) {
   // 3. Get signals
   // ===============================================
   app.get(signalsUrl, function (req, res) {
-      var limit = req.query.limit || defaultLimit;
-      var offset = req.query.offset || defaultOffset;
-      var sort = req.query.sort; // '-type date'
-      var fields = 'type location description author status';
+    var limit = req.query.limit || defaultLimit;
+    var offset = req.query.offset || defaultOffset;
+    var sort = req.query.sort; // '-type date'
+    var fields = 'type location description author status';
 
-      if(req.query.fields) {
-        fields = req.query.fields.replace(/,/g, ' ');
+    if (req.query.fields) {
+      fields = req.query.fields.replace(/,/g, ' ');
+    }
+
+    //filtering params
+    var location = req.query.location; //42.425236,21.452352
+    var radius = req.query.radius || 50;
+    var status = req.query.status; //strings
+    var user = req.query.user; //user id
+    var types = req.query.types; //signal types strings
+    var validated = req.query.validated; // true/false
+
+    q = db.Signal.find();
+    q.limit(limit);
+    q.skip(offset);
+    q.select(fields);
+
+    //filter by user id
+    if (user) {
+      q.where('author', user);
+    }
+    if (validated) {
+      q.where('validated', validated);
+    }
+    if (status) {
+      //remove all whitespaces from the passed string
+      status = status.replace(/ /g, '');
+      var statusArray = status.split(',');
+      q.where('status').in(statusArray);
+    }
+    if (types) {
+      types = types.replace(/ /g, '');
+      var typesArray = types.split(',');
+      q.where('type').in(typesArray);
+    }
+    if (location) {
+      console.log(location);
+      var location = location.replace(/ /g, '');
+      var locationArray = location.split(',');
+      var maxDistance = radius * 0.00000900900901; //converts radians to meters
+      q.where('location').near({ center: locationArray, maxDistance: maxDistance });
+    }
+    if (sort) {
+      q.sort(sort);
+    }
+
+    var metadata = {
+      per_page: '',
+      next: '',
+      page: '',
+      previous: '',
+      total_count: ''
+    };
+
+    q.exec(function (err, entities) {
+      if (entities) {
+        for (var i = 0; i < entities.length; i++) {
+          entities[i] = entities[i].toObject();
+          entities[i]._url = signalsUrl + '/' + entities[i]._id;
+        }
       }
 
-      //filtering params
-      var location = req.query.location; //42.425236,21.452352
-      var radius = req.query.radius || 50;
-      var status = req.query.status; //strings
-      var user = req.query.user; //user id
-      var types = req.query.types; //signal types strings
-      var validated = req.query.validated; // true/false
-
-      q = db.Signal.find();
-      q.limit(limit);
-      q.skip(offset);
-      q.select(fields);
-
-      //filter by user id
-      if(user) {
-        q.where('author', user);
-      }
-      if(validated) {
-        q.where('validated', validated);
-      }
-      if(status) {
-        //remove all whitespaces from the passed string
-        status = status.replace(/ /g,'');
-        var statusArray = status.split(',');
-        q.where('status').in(statusArray);
-      }
-      if(types) {
-        types = types.replace(/ /g,'');
-        var typesArray = types.split(',');
-        q.where('type').in(typesArray);
-      }
-      if(location) {
-        console.log(location);
-        var location = location.replace(/ /g,'');
-        var locationArray = location.split(',');
-        var maxDistance = radius * 0.00000900900901; //converts radians to meters
-        q.where('location').near({ center: locationArray, maxDistance: maxDistance });
-      }
-      if(sort) {
-        q.sort(sort);
-      }
-
-      var metadata = {
-        per_page: '',
-        next: '',
-        page: '',
-        previous: '',
-        total_count: ''
+      var response = {
+        metadata: metadata,
+        data: entities ? entities : []
       };
 
-      q.exec(function (err, entities) {
-        if(entities) {
-          for (var i = 0; i < entities.length; i++) {
-            entities[i] = entities[i].toObject();
-            entities[i]._url = signalsUrl + '/' + entities[i]._id;
-          }
-        }
+      utils.returnErrorIf(err, err, res);
 
-        var response = {
-          metadata: metadata,
-          data: entities ? entities : []
-        };
-
-        utils.returnErrorIf(err, err, res);
-
-        res.send(response);
-      });
+      res.send(response);
+    });
   });
 
   // ===============================================
@@ -316,11 +316,11 @@ function initApp(app) {
     var fields = 'location description type created comments thanks votes image validated updated image author authorName';
     var signalId = req.params.id;
 
-    if(req.query.fields) {
+    if (req.query.fields) {
       fields = req.query.fields.replace(/,/g, ' ');
     }
 
-    db.Signal.findById(signalId, fields, function(err, signal) {
+    db.Signal.findById(signalId, fields, function (err, signal) {
       utils.returnErrorIf(err, err, res);
       utils.returnErrorIf(!signal, 'No signal with this Id', res);
       res.send(signal);
@@ -341,32 +341,32 @@ function initApp(app) {
     var address = req.body.address;
     var validated = req.body.validated;
 
-    db.Signal.findById(signalId, function(err, signal) {
+    db.Signal.findById(signalId, function (err, signal) {
       utils.returnErrorIf(err, err, res);
 
-      if(lat && lng) {
+      if (lat && lng) {
         signal.location = [lat, lng];
       }
 
-      if(type) {
+      if (type) {
         signal.type = type;
       }
 
-      if(description) {
+      if (description) {
         signal.description = description;
       }
 
-      if(address) {
+      if (address) {
         signal.address = address;
       }
 
-      if(validated) {
+      if (validated) {
         signal.validated = validated;
       }
 
       signal.updated = new Date();
 
-      signal.save(function(err, signal) {
+      signal.save(function (err, signal) {
         utils.returnErrorIf(err, err, res);
 
         res.send(signal);
@@ -381,7 +381,7 @@ function initApp(app) {
   app.delete(signalUrl, function (req, res) {
     var signalId = req.params.id;
 
-    db.Signal.findByIdAndRemove(signalId, function(err, signal) {
+    db.Signal.findByIdAndRemove(signalId, function (err, signal) {
       utils.returnErrorIf(err, err, res);
       utils.returnErrorIf(!signal, 'No signal with this Id', res);
       res.send(signal);
@@ -398,7 +398,7 @@ function initApp(app) {
     var sort = req.query.sort; // '-type date'
     var fields = 'type location description author status';
 
-    if(req.query.fields) {
+    if (req.query.fields) {
       fields = req.query.fields.replace(/,/g, ' ');
     }
 
@@ -407,7 +407,7 @@ function initApp(app) {
     q.skip(offset);
     q.select(fields);
 
-    if(sort) {
+    if (sort) {
       q.sort(sort);
     }
 
@@ -419,7 +419,7 @@ function initApp(app) {
       total_count: ''
     };
 
-    q.exec(function(err, entities) {
+    q.exec(function (err, entities) {
       utils.returnErrorIf(err, err, res);
 
       //adds _url to the data
@@ -453,7 +453,7 @@ function initApp(app) {
       password: password
     });
 
-    newUser.save(function(err, user) {
+    newUser.save(function (err, user) {
       utils.returnErrorIf(err.code === 11000, 'This email is already registered, please choose another one.', res);
       utils.returnErrorIf(err, err, res);
 
@@ -471,11 +471,11 @@ function initApp(app) {
     var userId = req.params.id;
     var fields = '';
 
-    if(req.query.fields) {
+    if (req.query.fields) {
       fields = req.query.fields.replace(/,/g, ' ');
     }
 
-    db.User.findById(userId, fields, function(err, user) {
+    db.User.findById(userId, fields, function (err, user) {
       utils.returnErrorIf(err, err, res);
       utils.returnErrorIf(user, 'No user with this id., res');
 
@@ -500,7 +500,7 @@ function initApp(app) {
   app.delete(userUrl, function (req, res) {
     var userId = req.params.id;
 
-    db.User.findByIdAndRemove(userId, function(err, user) {
+    db.User.findByIdAndRemove(userId, function (err, user) {
       utils.returnErrorIf(err, err, res);
       utils.returnErrorIf(user, 'No user with this id., res');
 
@@ -523,7 +523,7 @@ function initApp(app) {
 
     utils.returnErrorIf(!text, 'Please provide a text for the comment.', res)
 
-    db.Signal.findById(signalId, function(err, signal) {
+    db.Signal.findById(signalId, function (err, signal) {
       utils.returnErrorIf(err, err, res);
       utils.returnErrorIf(!signal, 'No signal with this id.', res);
 
@@ -539,7 +539,7 @@ function initApp(app) {
 
       //add the comment to the parent signal
       signal.comments.push(newComment);
-      signal.save(function(err, signal) {
+      signal.save(function (err, signal) {
         utils.returnErrorIf(err, err, res);
         res.send(newComment);
       });
@@ -564,57 +564,65 @@ function initApp(app) {
     var signalId = req.params.id;
     var commentId = req.params.comment_id;
 
-    db.Signal.findById(signalId, function(err, signal) {
+    db.Signal.findById(signalId, function (err, signal) {
       utils.returnErrorIf(err, err, res);
       utils.returnErrorIf(!signal, 'No Signal with this id.', res);
 
       var comment = signal.comments.id(commentId);
       utils.returnErrorIf(!comment, 'No Comment with this id.', res);
-      
-      if(comment) {
+
+      if (comment) {
         comment.remove();
       }
 
-      signal.save(function(err) {
+      signal.save(function (err) {
         utils.returnErrorIf(err, err, res);
 
         res.send(comment);
       });
-
-
     });
-
-//    db.Signal.findByIdAndUpdate(signalId, {$pull: {comments: {_id: commentId}}}, function(err, signal) {
-//      utils.returnErrorIf(err, err, res);
-//      utils.returnErrorIf(!signal, 'No Signal with this id.', res);
-//
-//      res.send(signal);
-//    });
-
-//    db.Signal.findOne({'comments._id': commentId}, {'comments.$': 1}, function(err, signal) {
-//      utils.returnErrorIf(err, err, res);
-//      utils.returnErrorIf(!signal, 'No signal with this id.', res);
-//      utils.returnErrorIf(!signal.comments[0], 'No comment with this id.', res);
-//
-//      var comment = signal.comments[0];
-//      signal.comments[0] = null;
-//
-//      res.send(comment);
-//    });
   });
 
   // ===============================================
   // 16. Flag user
   // ===============================================
   app.post(flagUserUrl, function (req, res) {
-    res.send('login');
   });
 
   // ===============================================
   // 17. flag comment
   // ===============================================
   app.post(flagCommentUrl, function (req, res) {
-    res.send('login');
+    var signalId = req.params.id;
+    var commentId = req.params.comment_id;
+    var reason = req.body.reason;
+
+    utils.returnErrorIf(!reason, 'Please provide a reason.', res);
+
+    db.Signal.findById(signalId, function (err, signal) {
+      utils.returnErrorIf(err, err, res);
+      utils.returnErrorIf(!signal, 'No Signal with this id.', res);
+
+      var comment = signal.comments.id(commentId);
+      utils.returnErrorIf(!comment, 'No Comment with this id.', res);
+
+      if (comment) {
+        var newFlag = new db.Flagged({
+          targetType: "Comment",
+          reason: reason,
+          _flagged: comment
+        });
+
+        newFlag.save(function (err, flag) {
+          utils.returnErrorIf(err, err, res);
+
+          var flag = flag.toObject();
+          delete flag.__v;
+          res.send(flag);
+        });
+      }
+
+    });
   });
 
   // ===============================================
