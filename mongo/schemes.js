@@ -45,7 +45,8 @@ module.exports = {
             date: { type: Date, default: Date.now },
             updatedAd: Date,
             image: String,
-            text: String
+            text: String,
+            action: String
         } ],
         validated: Boolean,
         validatedBy: { type: Schema.Types.ObjectId, ref: 'User' },

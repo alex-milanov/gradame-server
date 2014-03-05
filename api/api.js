@@ -75,10 +75,6 @@ function initApp(app) {
         method: 'POST'
       },
       {
-        url: commentsUrl,
-        method: 'POST'
-      },
-      {
         url: commentUrl,
         method: 'PUT'
       },
@@ -518,7 +514,40 @@ function initApp(app) {
   // 13. Add comment
   // ===============================================
   app.post(commentsUrl, function (req, res) {
-    res.send('login');
+    //TODO add image upload support
+    var signalId = req.params.id;
+    var text = req.body.text;
+    var action = req.body.action;
+    //var photo = req.body.photo;
+
+    utils.returnErrorIf(!text, 'Please provide a text for the comment.', res)
+
+    db.Signal.findById(signalId, function(err, signal) {
+      utils.returnErrorIf(err, err, res);
+      utils.returnErrorIf(!signal, 'No signal with this id.', res);
+
+      //TODO set author to the requesting user
+
+      console.log(signal);
+
+      var newComment = {
+        //author: req.user,
+        //authorName: req.user.name,
+        date: new Date(),
+        //image: photo,
+        text: text,
+        action: action
+      };
+
+      //add the comment to the parent signal
+      signal.comments.push(newComment);
+      signal.save(function(err, signal) {
+        utils.returnErrorIf(err, err, res);
+        res.send(newComment);
+      });
+    });
+
+
   });
 
   // ===============================================
@@ -532,7 +561,8 @@ function initApp(app) {
   // 15. Delete comment
   // ===============================================
   app.delete(commentUrl, function (req, res) {
-    res.send('login');
+    //var signalId =
+    //var commentId =
   });
 
   // ===============================================
