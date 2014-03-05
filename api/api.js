@@ -392,6 +392,7 @@ function initApp(app) {
   // 8. Get users
   // ===============================================
   app.get(usersUrl, function (req, res) {
+    //TODO filter by name - names like john /john/i
     var limit = req.query.limit || defaultLimit;
     var offset = req.query.offset || defaultOffset;
     var sort = req.query.sort; // '-type date'
@@ -527,9 +528,6 @@ function initApp(app) {
       utils.returnErrorIf(!signal, 'No signal with this id.', res);
 
       //TODO set author to the requesting user
-
-      console.log(signal);
-
       var newComment = {
         //author: req.user,
         //authorName: req.user.name,
@@ -554,15 +552,55 @@ function initApp(app) {
   // 14. Update comment
   // ===============================================
   app.put(commentUrl, function (req, res) {
-    res.send('login');
+    //TODO Update only if requesting user is author
   });
 
   // ===============================================
   // 15. Delete comment
   // ===============================================
   app.delete(commentUrl, function (req, res) {
-    //var signalId =
-    //var commentId =
+    //TODO Delete only if requesting user is author
+
+    var signalId = req.params.id;
+    var commentId = req.params.comment_id;
+
+    db.Signal.findById(signalId, function(err, signal) {
+      utils.returnErrorIf(err, err, res);
+      utils.returnErrorIf(!signal, 'No Signal with this id.', res);
+
+      var comment = signal.comments.id(commentId);
+      utils.returnErrorIf(!comment, 'No Comment with this id.', res);
+      
+      if(comment) {
+        comment.remove();
+      }
+
+      signal.save(function(err) {
+        utils.returnErrorIf(err, err, res);
+
+        res.send(comment);
+      });
+
+
+    });
+
+//    db.Signal.findByIdAndUpdate(signalId, {$pull: {comments: {_id: commentId}}}, function(err, signal) {
+//      utils.returnErrorIf(err, err, res);
+//      utils.returnErrorIf(!signal, 'No Signal with this id.', res);
+//
+//      res.send(signal);
+//    });
+
+//    db.Signal.findOne({'comments._id': commentId}, {'comments.$': 1}, function(err, signal) {
+//      utils.returnErrorIf(err, err, res);
+//      utils.returnErrorIf(!signal, 'No signal with this id.', res);
+//      utils.returnErrorIf(!signal.comments[0], 'No comment with this id.', res);
+//
+//      var comment = signal.comments[0];
+//      signal.comments[0] = null;
+//
+//      res.send(comment);
+//    });
   });
 
   // ===============================================

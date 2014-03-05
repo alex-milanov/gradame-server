@@ -43,7 +43,7 @@ module.exports = {
             author: { type: Schema.Types.ObjectId, ref: 'User' },
             authorName: String,
             date: { type: Date, default: Date.now },
-            updatedAd: Date,
+            updated: Date,
             image: String,
             text: String,
             action: String
