@@ -282,6 +282,7 @@ function initApp(app) {
     var type = req.body.type;
     var photo = req.files.photo;
     var description = req.body.description || '';
+    var address = req.files.address;
 
     if(!lat) {
       res.send({error: "Please provide geo lat."});
@@ -295,11 +296,16 @@ function initApp(app) {
       res.send({error: "Please provide a signal type."});
       return false;
     }
+    if(!address) {
+      res.send({error: "Please provide a signal address."});
+      return false;
+    }
 
     var signal = new db.Signal({
       location: [lat, lng],
       description: description,
-      type: type
+      type: type,
+      address: address
       //author: req.user,
       //authorName: req.user.name
     });
@@ -348,15 +354,81 @@ function initApp(app) {
   // ===============================================
   // 5. Get signal
   // ===============================================
-  app.post(signalUrl, function (req, res) {
-    res.send('login');
+  app.get(signalUrl, function (req, res) {
+    var fields = 'location description type created comments thanks votes image validated updated image author authorName';
+    var signalId = req.params.id;
+
+    if(req.query.fields) {
+      fields = req.query.fields.replace(/,/g, ' ');
+    }
+
+    db.Signal.findById(signalId, fields, function(err, signal) {
+      if(err) {
+        res.send({error: err});
+        return false;
+      };
+
+      if(!signal) {
+        res.send({error: 'No signal with this Id'});
+        return false;
+      };
+
+      res.send(signal);
+    });
   });
 
   // ===============================================
   // 6. Update signal
   // ===============================================
   app.put(signalUrl, function (req, res) {
-    res.send('login');
+    //TODO update only if author is the user trying to update it
+
+    var signalId = req.params.id;
+    var lat = req.body.lat;
+    var lng = req.body.lng;
+    var type = req.body.type;
+    var description = req.body.description || '';
+    var address = req.body.address;
+    var validated = req.body.validated;
+
+    db.Signal.findById(signalId, function(err, signal) {
+      if(err) {
+        res.send({error: err});
+        return false;
+      };
+
+      if(lat && lng) {
+        signal.location = [lat, lng];
+      }
+
+      if(type) {
+        signal.type = type;
+      }
+
+      if(description) {
+        signal.description = description;
+      }
+
+      if(address) {
+        signal.address = address;
+      }
+
+      if(validated) {
+        signal.validated = validated;
+      }
+
+      signal.updated = new Date();
+
+      signal.save(function(err, signal) {
+        if(err) {
+          res.send({error: err});
+          return false;
+        };
+
+        res.send(signal);
+      })
+    });
+
   });
 
   // ===============================================
