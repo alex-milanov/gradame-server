@@ -119,9 +119,18 @@ function initApp(app) {
     var email = req.body.email;
     var password = req.body.password;
 
-    if (!token) res.send({error: 'API key is missing.'});
-    if (!email) res.send({error: 'Please provide username.'});
-    if (!password) res.send({error: 'Please provide password.'});
+    if (!token) {
+      res.send({error: 'API key is missing.'});
+      return false;
+    }
+    if (!email) {
+      res.send({error: 'Please provide username.'});
+      return false;
+    }
+    if (!password) {
+      res.send({error: 'Please provide password.'});
+      return false;
+    }
 
     var fields = '_id name email registerAt';
 
