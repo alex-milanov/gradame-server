@@ -120,6 +120,33 @@ function initApp(app) {
         res.send({error: 'Please login to use the api.'});
         return false;
       }
+    },
+    createMetaData: function(url, totalCount, req) {
+      var limit = req.query.limit || defaultLimit;
+      var offset = req.query.offset || defaultOffset;
+
+      var total = totalCount || 0;
+
+      var nextPage = (parseInt(offset) + parseInt(limit));
+      var prevPage = (parseInt(offset) - parseInt(limit));
+
+      var next = url + '?offset=' + nextPage + '&limit=' + limit;
+      var previous = url + '?offset=' + prevPage + '&limit=' + limit;
+
+      var metadata = {
+        per_page: limit,
+        total_count: total
+      };
+
+      if(prevPage > 0) {
+        metadata.previous = previous;
+      }
+
+      if(nextPage <= total) {
+        metadata.next = next;
+      }
+
+      return metadata;
     }
   };
 
@@ -242,16 +269,8 @@ function initApp(app) {
           }
         }
 
-        var metadata = {
-          per_page: '',
-          next: '',
-          page: '',
-          previous: '',
-          total_count: count
-        };
-
         var response = {
-          metadata: metadata,
+          metadata: utils.createMetaData(signalsUrl, count, req),
           data: entities ? entities : []
         };
 
@@ -407,7 +426,7 @@ function initApp(app) {
   // 8. Get users
   // ===============================================
   app.get(usersUrl, function (req, res) {
-    utils.isLogged(req, res);
+    //utils.isLogged(req, res);
 
     //TODO filter by name - names like john /john/i
     var limit = req.query.limit || defaultLimit;
@@ -434,14 +453,6 @@ function initApp(app) {
       q.exec(function (err, entities) {
         utils.returnErrorIf(err, err, res);
 
-        var metadata = metadata = {
-          per_page: '',
-          next: '',
-          page: '',
-          previous: '',
-          total_count: count
-        };
-
         //adds _url to the data
         if(entities) {
           for (var i = 0; i < entities.length; i++) {
@@ -453,7 +464,7 @@ function initApp(app) {
         }
 
         res.send({
-          metadata: metadata,
+          metadata: utils.createMetaData(signalsUrl, count, req),
           data: entities ? entities : []
         });
       });
