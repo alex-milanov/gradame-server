@@ -230,31 +230,34 @@ function initApp(app) {
       q.sort(sort);
     }
 
-    var metadata = {
-      per_page: '',
-      next: '',
-      page: '',
-      previous: '',
-      total_count: ''
-    };
-
-    q.exec(function (err, entities) {
-      if (entities) {
-        for (var i = 0; i < entities.length; i++) {
-          entities[i] = entities[i].toObject();
-          entities[i]._url = signalsUrl + '/' + entities[i]._id;
-        }
-      }
-
-      var response = {
-        metadata: metadata,
-        data: entities ? entities : []
-      };
-
+    db.Signal.count(function(err, count) {
       utils.returnErrorIf(err, err, res);
 
-      res.send(response);
-    });
+      q.exec(function (err, entities) {
+        utils.returnErrorIf(err, err, res);
+        if (entities) {
+          for (var i = 0; i < entities.length; i++) {
+            entities[i] = entities[i].toObject();
+            entities[i]._url = signalsUrl + '/' + entities[i]._id;
+          }
+        }
+
+        var metadata = {
+          per_page: '',
+          next: '',
+          page: '',
+          previous: '',
+          total_count: count
+        };
+
+        var response = {
+          metadata: metadata,
+          data: entities ? entities : []
+        };
+
+        res.send(response);
+      });
+    })
   });
 
   // ===============================================
@@ -425,32 +428,36 @@ function initApp(app) {
       q.sort(sort);
     }
 
-    var metadata = metadata = {
-      per_page: '',
-      next: '',
-      page: '',
-      previous: '',
-      total_count: ''
-    };
-
-    q.exec(function (err, entities) {
+    db.User.count(function(err, count) {
       utils.returnErrorIf(err, err, res);
 
-      //adds _url to the data
-      if(entities) {
-        for (var i = 0; i < entities.length; i++) {
-          entities[i] = entities[i].toObject();
-          entities[i]._url = usersUrl + '/' + entities[i]._id;
-          delete entities[i].__v;
-          delete entities[i].password;
-        }
-      }
+      q.exec(function (err, entities) {
+        utils.returnErrorIf(err, err, res);
 
-      res.send({
-        metadata: metadata,
-        data: entities ? entities : []
+        var metadata = metadata = {
+          per_page: '',
+          next: '',
+          page: '',
+          previous: '',
+          total_count: count
+        };
+
+        //adds _url to the data
+        if(entities) {
+          for (var i = 0; i < entities.length; i++) {
+            entities[i] = entities[i].toObject();
+            entities[i]._url = usersUrl + '/' + entities[i]._id;
+            delete entities[i].__v;
+            delete entities[i].password;
+          }
+        }
+
+        res.send({
+          metadata: metadata,
+          data: entities ? entities : []
+        });
       });
-    });
+    })
   });
 
   // ===============================================
