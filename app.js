@@ -36,7 +36,7 @@ app.use(express.session({ secret: '3264ytgerw3454tr' }));
 app.use(passport.initialize());
 app.use(passport.session());
 
-//middleware for loged user
+//middleware for logged user
 app.use(function(req, res, next) {
     res.locals.user = req.user;
     next();
@@ -157,7 +157,6 @@ passport.use(new BearerStrategy({
 app.get('/api/auth',
     passport.authenticate('bearer', { session: false }),
     function(req, res) {
-        console.log(req.host);
         res.send('success ' + req.host);
     });
 //end oauth2

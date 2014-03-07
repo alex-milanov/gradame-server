@@ -1,4 +1,5 @@
 var db = require('../mongo/db');
+var passport = require('passport');
 
 
 function initApp(app) {
@@ -113,6 +114,12 @@ function initApp(app) {
         res.send({error: reason});
         return false;
       }
+    },
+    isLogged: function(req, res) {
+      if(!req.user) {
+        res.send({error: 'Please login to use the api.'});
+        return false;
+      }
     }
   };
 
@@ -121,7 +128,7 @@ function initApp(app) {
   // ===============================================
   app.post(loginUrl, function (req, res) {
     var token = req.header('token');
-    var email = req.body.email;
+    var email = req.body.username;
     var password = req.body.password;
 
     utils.returnErrorIf(!token, 'API key is missing.', res);
@@ -131,13 +138,13 @@ function initApp(app) {
     var fields = '_id name email registerAt';
 
     db.User.findOne({email: email, password: password}, fields, function (err, user) {
-      if (user) {
-        res.send(user);
-      } else {
-        res.send({error: 'Incorrect username or password.'});
-      }
-
       utils.returnErrorIf(err, err, res);
+      utils.returnErrorIf(!user, 'Incorrect username or password.', res);
+
+      req.login(user, function(err) {
+        utils.returnErrorIf(err, err, res);
+        res.send(user);
+      });
     });
   });
 
@@ -145,33 +152,33 @@ function initApp(app) {
   // 2. Get signal types
   // ===============================================
   app.get(signalTypesUrl, function (req, res) {
-    try {
-      db.SignalType.find({}, function (err, signalTypes) {
-        if (signalTypes) {
+    utils.isLogged(req, res);
 
-          var metadata = {
-            total_count: signalTypes.length
-          };
+    db.SignalType.find({}, function (err, signalTypes) {
+      if (signalTypes) {
 
-          res.send({
-            metadata: metadata,
-            data: signalTypes
-          });
-        } else {
-          res.send({});
-        }
+        var metadata = {
+          total_count: signalTypes.length
+        };
 
-        utils.returnErrorIf(err, err, res);
-      });
-    } catch (err) {
-      res.send({error: err});
-    }
+        res.send({
+          metadata: metadata,
+          data: signalTypes
+        });
+      } else {
+        res.send({});
+      }
+
+      utils.returnErrorIf(err, err, res);
+    });
   });
 
   // ===============================================
   // 3. Get signals
   // ===============================================
   app.get(signalsUrl, function (req, res) {
+    utils.isLogged(req, res);
+
     var limit = req.query.limit || defaultLimit;
     var offset = req.query.offset || defaultOffset;
     var sort = req.query.sort; // '-type date'
@@ -254,7 +261,7 @@ function initApp(app) {
   // 4. Add signal
   // ===============================================
   app.post(signalsUrl, function (req, res) {
-    //TODO Add author from token
+    utils.isLogged(req, res);
 
     var lat = req.body.lat;
     var lng = req.body.lng;
@@ -272,9 +279,9 @@ function initApp(app) {
       location: [lat, lng],
       description: description,
       type: type,
-      address: address
-      //author: req.user,
-      //authorName: req.user.name
+      address: address,
+      author: req.user,
+      authorName: req.user.name
     });
 
     signal.save(function (err, signal) {
@@ -313,6 +320,8 @@ function initApp(app) {
   // 5. Get signal
   // ===============================================
   app.get(signalUrl, function (req, res) {
+    utils.isLogged(req, res);
+
     var fields = 'location description type created comments thanks votes image validated updated image author authorName';
     var signalId = req.params.id;
 
@@ -331,6 +340,7 @@ function initApp(app) {
   // 6. Update signal
   // ===============================================
   app.put(signalUrl, function (req, res) {
+    utils.isLogged(req, res);
     //TODO update only if author is the user trying to update it
 
     var signalId = req.params.id;
@@ -379,6 +389,8 @@ function initApp(app) {
   // 7. Delete signal
   // ===============================================
   app.delete(signalUrl, function (req, res) {
+    utils.isLogged(req, res);
+    //TODO Delete if signal's author is the logged user
     var signalId = req.params.id;
 
     db.Signal.findByIdAndRemove(signalId, function (err, signal) {
@@ -392,6 +404,8 @@ function initApp(app) {
   // 8. Get users
   // ===============================================
   app.get(usersUrl, function (req, res) {
+    utils.isLogged(req, res);
+
     //TODO filter by name - names like john /john/i
     var limit = req.query.limit || defaultLimit;
     var offset = req.query.offset || defaultOffset;
@@ -443,6 +457,8 @@ function initApp(app) {
   // 9. Add user
   // ===============================================
   app.post(usersUrl, function (req, res) {
+    utils.isLogged(req, res);
+
     var email = req.body.email;
     var password = req.body.password;
     var name = req.body.name || '';
@@ -470,6 +486,8 @@ function initApp(app) {
   // 10. Get user
   // ===============================================
   app.get(userUrl, function (req, res) {
+    utils.isLogged(req, res);
+
     var userId = req.params.id;
     var fields = '';
 
@@ -492,6 +510,7 @@ function initApp(app) {
   // 11. Update user
   // ===============================================
   app.put(userUrl, function (req, res) {
+    utils.isLogged(req, res);
     //TODO update user - change password, avatar image
     res.send('login');
   });
@@ -500,6 +519,7 @@ function initApp(app) {
   // 12. Delete user
   // ===============================================
   app.delete(userUrl, function (req, res) {
+    utils.isLogged(req, res);
     var userId = req.params.id;
 
     db.User.findByIdAndRemove(userId, function (err, user) {
@@ -517,6 +537,7 @@ function initApp(app) {
   // 13. Add comment
   // ===============================================
   app.post(commentsUrl, function (req, res) {
+    utils.isLogged(req, res);
     //TODO add image upload support
     var signalId = req.params.id;
     var text = req.body.text;
@@ -554,6 +575,7 @@ function initApp(app) {
   // 14. Update comment
   // ===============================================
   app.put(commentUrl, function (req, res) {
+    utils.isLogged(req, res);
     //TODO Update only if requesting user is author
   });
 
@@ -561,6 +583,7 @@ function initApp(app) {
   // 15. Delete comment
   // ===============================================
   app.delete(commentUrl, function (req, res) {
+    utils.isLogged(req, res);
     //TODO Delete only if requesting user is author
 
     var signalId = req.params.id;
@@ -589,7 +612,7 @@ function initApp(app) {
   // 16. Flag user
   // ===============================================
   app.post(flagUserUrl, function (req, res) {
-
+    utils.isLogged(req, res);
     //TODO - Add flag author - requesting user
     var userId = req.params.id;
     var reason = req.body.reason;
@@ -620,6 +643,7 @@ function initApp(app) {
   // 17. flag comment
   // ===============================================
   app.post(flagCommentUrl, function (req, res) {
+    utils.isLogged(req, res);
     //TODO - Add flag author - requesting user
     var signalId = req.params.id;
     var commentId = req.params.comment_id;
@@ -657,6 +681,7 @@ function initApp(app) {
   // 18. flag signal
   // ===============================================
   app.post(flagSignalUrl, function (req, res) {
+    utils.isLogged(req, res);
     //TODO - Add flag author - requesting user
     var signalId = req.params.id;
     var reason = req.body.reason;
@@ -688,6 +713,7 @@ function initApp(app) {
   // 19. Vote up a signal
   // ===============================================
   app.post(voteUpSignalUrl, function (req, res) {
+    utils.isLogged(req, res);
     res.send('login');
   });
 
@@ -695,6 +721,7 @@ function initApp(app) {
   // 20. Say thanks to a closed signal
   // ===============================================
   app.post(sayThanksUrl, function (req, res) {
+    utils.isLogged(req, res);
     res.send('login');
   });
 
