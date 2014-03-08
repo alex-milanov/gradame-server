@@ -27,6 +27,11 @@ function initApp(app) {
         url: loginUrl,
         method: 'POST'
       },
+
+      {
+        url: registerUrl,
+        method: 'POST'
+      },
       {
         url: signalTypesUrl,
         method: 'GET'
@@ -62,10 +67,6 @@ function initApp(app) {
       {
         url: userUrl,
         method: 'GET'
-      },
-      {
-        url: userUrl,
-        method: 'POST'
       },
       {
         url: userUrl,
@@ -393,7 +394,7 @@ function initApp(app) {
   // 6. Update signal
   // ===============================================
   app.put(signalUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
     //TODO update only if author is the user trying to update it
 
     var signalId = req.params.id;
@@ -473,12 +474,14 @@ function initApp(app) {
   // 8. Get users
   // ===============================================
   app.get(usersUrl, function (req, res) {
-    if(!utils.isLogged(req, res)) return false;
+    //if(!utils.isLogged(req, res)) return false;
 
     //TODO filter by name - names like john /john/i
     var limit = req.query.limit || defaultLimit;
     var offset = req.query.offset || defaultOffset;
     var sort = req.query.sort; // '-type date'
+    var name = req.query.name;
+    var email = req.query.email;
     var fields = '';
 
     if (req.query.fields) {
@@ -489,6 +492,14 @@ function initApp(app) {
     q.limit(limit);
     q.skip(offset);
     q.select(fields);
+
+    if(name) {
+      q.where('name', new RegExp(name, 'i'));
+    }
+
+    if(email) {
+      q.where('email', new RegExp(email, 'i'));
+    }
 
     if (sort) {
       q.sort(sort);
@@ -507,6 +518,7 @@ function initApp(app) {
             entities[i]._url = usersUrl + '/' + entities[i]._id;
             delete entities[i].__v;
             delete entities[i].password;
+            delete entities[i].email;
           }
         }
 
@@ -546,7 +558,7 @@ function initApp(app) {
   // 11. Update user
   // ===============================================
   app.put(userUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
     //TODO update user - change password, avatar image
     res.send('login');
   });
@@ -668,7 +680,6 @@ function initApp(app) {
   app.post(flagUserUrl, function (req, res) {
     if(!utils.isLogged(req, res)) return false;
 
-    //TODO - Add flag author - requesting user
     var userId = req.params.id;
     var reason = req.body.reason;
 
@@ -703,7 +714,6 @@ function initApp(app) {
   app.post(flagCommentUrl, function (req, res) {
     if(!utils.isLogged(req, res)) return false;
 
-    //TODO - Add flag author - requesting user
     var signalId = req.params.id;
     var commentId = req.params.comment_id;
     var reason = req.body.reason;
