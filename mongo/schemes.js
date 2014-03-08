@@ -34,13 +34,13 @@ module.exports = {
         status: String,
         image: String,
         votes: [{
-            author: { type: Schema.Types.ObjectId, ref: 'User'}
+            _author: { type: Schema.Types.ObjectId, ref: 'User'}
         }],
         thanks: [{
-            author: { type: Schema.Types.ObjectId, ref: 'User'}
+            _author: { type: Schema.Types.ObjectId, ref: 'User'}
         }],
         comments: [ {
-            author: { type: Schema.Types.ObjectId, ref: 'User' },
+            _author: { type: Schema.Types.ObjectId, ref: 'User' },
             authorName: String,
             date: { type: Date, default: Date.now },
             updated: Date,
@@ -60,6 +60,7 @@ module.exports = {
         reason: String,
         decision: String,
         checked: Boolean,
+        _reportedBy: { type: Schema.Types.ObjectId, ref: 'User' },
         _revisitedBy: { type: Schema.Types.ObjectId, ref: 'User' }
     }
 };

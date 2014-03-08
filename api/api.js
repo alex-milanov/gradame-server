@@ -154,11 +154,11 @@ function initApp(app) {
   // 1. Login
   // ===============================================
   app.post(loginUrl, function (req, res) {
-    var token = req.header('token');
+    //var token = req.header('token');
     var email = req.body.username;
     var password = req.body.password;
 
-    utils.returnErrorIf(!token, 'API key is missing.', res);
+    //utils.returnErrorIf(!token, 'API key is missing.', res);
     utils.returnErrorIf(!email, 'Please provide username.', res);
     utils.returnErrorIf(!password, 'Please provide password.', res);
 
@@ -168,10 +168,12 @@ function initApp(app) {
       utils.returnErrorIf(err, err, res);
       utils.returnErrorIf(!user, 'Incorrect username or password.', res);
 
-      req.login(user, function(err) {
-        utils.returnErrorIf(err, err, res);
-        res.send(user);
-      });
+      if(user) {
+        req.login(user, function(err) {
+          utils.returnErrorIf(err, err, res);
+          res.send(user);
+        });
+      }
     });
   });
 
@@ -412,13 +414,22 @@ function initApp(app) {
   // ===============================================
   app.delete(signalUrl, function (req, res) {
     utils.isLogged(req, res);
-    //TODO Delete if signal's author is the logged user
     var signalId = req.params.id;
 
-    db.Signal.findByIdAndRemove(signalId, function (err, signal) {
+    db.Signal.findById(signalId, function (err, signal) {
       utils.returnErrorIf(err, err, res);
       utils.returnErrorIf(!signal, 'No signal with this Id', res);
-      res.send(signal);
+
+      if(signal) {
+        if(signal.author == req.user.id) {
+          signal.remove(function (err, signal) {
+            utils.returnErrorIf(err, err, res);
+            res.send(signal);
+          })
+        } else {
+          utils.returnErrorIf(true, 'This is not your signal to delete.', res);
+        }
+      }
     });
   });
 
@@ -515,7 +526,7 @@ function initApp(app) {
 
     db.User.findById(userId, fields, function (err, user) {
       utils.returnErrorIf(err, err, res);
-      utils.returnErrorIf(user, 'No user with this id., res');
+      utils.returnErrorIf(!user, 'No user with this id.', res);
 
       user = user.toObject();
       delete user.__v;
@@ -540,15 +551,21 @@ function initApp(app) {
     utils.isLogged(req, res);
     var userId = req.params.id;
 
-    db.User.findByIdAndRemove(userId, function (err, user) {
-      utils.returnErrorIf(err, err, res);
-      utils.returnErrorIf(user, 'No user with this id., res');
+    if(req.user) {
+      if(req.user.id == userId) {
+        db.User.findByIdAndRemove(userId, function (err, user) {
+          utils.returnErrorIf(err, err, res);
+          utils.returnErrorIf(!user, 'No user with this id.', res);
 
-      user = user.toObject();
-      delete user.__v;
+          user = user.toObject();
+          delete user.__v;
 
-      res.send(user);
-    })
+          res.send(user);
+        });
+      } else {
+        utils.returnErrorIf(true, 'You have no permissions to delete this user.', res);
+      }
+    }
   });
 
   // ===============================================
@@ -556,6 +573,7 @@ function initApp(app) {
   // ===============================================
   app.post(commentsUrl, function (req, res) {
     utils.isLogged(req, res);
+
     //TODO add image upload support
     var signalId = req.params.id;
     var text = req.body.text;
@@ -564,28 +582,28 @@ function initApp(app) {
 
     utils.returnErrorIf(!text, 'Please provide a text for the comment.', res)
 
-    db.Signal.findById(signalId, function (err, signal) {
-      utils.returnErrorIf(err, err, res);
-      utils.returnErrorIf(!signal, 'No signal with this id.', res);
-
-      //TODO set author to the requesting user
-      var newComment = {
-        //author: req.user,
-        //authorName: req.user.name,
-        date: new Date(),
-        //image: photo,
-        text: text,
-        action: action
-      };
-
-      //add the comment to the parent signal
-      signal.comments.push(newComment);
-      signal.save(function (err, signal) {
+    if(req.user) {
+      db.Signal.findById(signalId, function (err, signal) {
         utils.returnErrorIf(err, err, res);
-        res.send(newComment);
-      });
-    });
+        utils.returnErrorIf(!signal, 'No signal with this id.', res);
 
+        var newComment = {
+          _author: req.user.id,
+          authorName: req.user.name,
+          date: new Date(),
+          //image: photo,
+          text: text,
+          action: action
+        };
+
+        //add the comment to the parent signal
+        signal.comments.push(newComment);
+        signal.save(function (err, signal) {
+          utils.returnErrorIf(err, err, res);
+          res.send(newComment);
+        });
+      });
+    }
 
   });
 
@@ -594,6 +612,10 @@ function initApp(app) {
   // ===============================================
   app.put(commentUrl, function (req, res) {
     utils.isLogged(req, res);
+
+    if(req.user) {
+      res.send('not implemented');
+    }
     //TODO Update only if requesting user is author
   });
 
@@ -602,28 +624,34 @@ function initApp(app) {
   // ===============================================
   app.delete(commentUrl, function (req, res) {
     utils.isLogged(req, res);
-    //TODO Delete only if requesting user is author
 
     var signalId = req.params.id;
     var commentId = req.params.comment_id;
 
-    db.Signal.findById(signalId, function (err, signal) {
-      utils.returnErrorIf(err, err, res);
-      utils.returnErrorIf(!signal, 'No Signal with this id.', res);
-
-      var comment = signal.comments.id(commentId);
-      utils.returnErrorIf(!comment, 'No Comment with this id.', res);
-
-      if (comment) {
-        comment.remove();
-      }
-
-      signal.save(function (err) {
+    if(req.user) {
+      db.Signal.findById(signalId, function (err, signal) {
         utils.returnErrorIf(err, err, res);
+        utils.returnErrorIf(!signal, 'No Signal with this id.', res);
 
-        res.send(comment);
+        var comment = signal.comments.id(commentId);
+        utils.returnErrorIf(!comment, 'No Comment with this id.', res);
+
+        if(comment) {
+          if(comment._author == req.user.id) {
+            comment.remove();
+          } else {
+            utils.returnErrorIf(true, 'This is not your comment to delete.', res);
+          }
+
+        }
+
+        signal.save(function (err) {
+          utils.returnErrorIf(err, err, res);
+
+          res.send(comment);
+        });
       });
-    });
+    }
   });
 
   // ===============================================
@@ -644,6 +672,7 @@ function initApp(app) {
       var newFlag = new db.Flagged({
         targetType: "User",
         reason: reason,
+        _reportedBy: req.user,
         _flagged: user
       });
 
@@ -680,6 +709,7 @@ function initApp(app) {
         var newFlag = new db.Flagged({
           targetType: "Comment",
           reason: reason,
+          _reportedBy: req.user,
           _flagged: comment
         });
 
@@ -713,6 +743,7 @@ function initApp(app) {
       var newFlag = new db.Flagged({
         targetType: "Signal",
         reason: reason,
+        _reportedBy: req.user,
         _flagged: signal
       });
 
