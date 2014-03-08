@@ -134,11 +134,11 @@ function initApp(app) {
       var previous = url + '?offset=' + prevPage + '&limit=' + limit;
 
       var metadata = {
-        per_page: limit,
+        limit: limit,
         total_count: total
       };
 
-      if(prevPage > 0) {
+      if(prevPage >= 0) {
         metadata.previous = previous;
       }
 
@@ -665,25 +665,27 @@ function initApp(app) {
 
     utils.returnErrorIf(!reason, 'Please provide a reason.', res);
 
-    db.User.findById(userId, function(err, user) {
-      utils.returnErrorIf(err, err, res);
-      utils.returnErrorIf(!user, 'No user with this id.', res);
-
-      var newFlag = new db.Flagged({
-        targetType: "User",
-        reason: reason,
-        _reportedBy: req.user,
-        _flagged: user
-      });
-
-      newFlag.save(function (err, flag) {
+    if(req.user) {
+      db.User.findById(userId, function(err, user) {
         utils.returnErrorIf(err, err, res);
+        utils.returnErrorIf(!user, 'No user with this id.', res);
 
-        var flag = flag.toObject();
-        delete flag.__v;
-        res.send(flag);
+        var newFlag = new db.Flagged({
+          targetType: "User",
+          reason: reason,
+          _reportedBy: req.user,
+          _flagged: user
+        });
+
+        newFlag.save(function (err, flag) {
+          utils.returnErrorIf(err, err, res);
+
+          var flag = flag.toObject();
+          delete flag.__v;
+          res.send(flag);
+        });
       });
-    });
+    }
   });
 
   // ===============================================
@@ -698,31 +700,32 @@ function initApp(app) {
 
     utils.returnErrorIf(!reason, 'Please provide a reason.', res);
 
-    db.Signal.findById(signalId, function (err, signal) {
-      utils.returnErrorIf(err, err, res);
-      utils.returnErrorIf(!signal, 'No Signal with this id.', res);
+    if(req.user) {
+      db.Signal.findById(signalId, function (err, signal) {
+        utils.returnErrorIf(err, err, res);
+        utils.returnErrorIf(!signal, 'No Signal with this id.', res);
 
-      var comment = signal.comments.id(commentId);
-      utils.returnErrorIf(!comment, 'No Comment with this id.', res);
+        var comment = signal.comments.id(commentId);
+        utils.returnErrorIf(!comment, 'No Comment with this id.', res);
 
-      if (comment) {
-        var newFlag = new db.Flagged({
-          targetType: "Comment",
-          reason: reason,
-          _reportedBy: req.user,
-          _flagged: comment
-        });
+        if (comment) {
+          var newFlag = new db.Flagged({
+            targetType: "Comment",
+            reason: reason,
+            _reportedBy: req.user,
+            _flagged: comment
+          });
 
-        newFlag.save(function (err, flag) {
-          utils.returnErrorIf(err, err, res);
+          newFlag.save(function (err, flag) {
+            utils.returnErrorIf(err, err, res);
 
-          var flag = flag.toObject();
-          delete flag.__v;
-          res.send(flag);
-        });
-      }
-
-    });
+            var flag = flag.toObject();
+            delete flag.__v;
+            res.send(flag);
+          });
+        }
+      });
+    }
   });
 
   // ===============================================
@@ -736,26 +739,27 @@ function initApp(app) {
 
     utils.returnErrorIf(!reason, 'Please provide a reason.', res);
 
-    db.Signal.findById(signalId, function(err, signal) {
-      utils.returnErrorIf(err, err, res);
-      utils.returnErrorIf(!signal, 'No signal with this id.', res);
-
-      var newFlag = new db.Flagged({
-        targetType: "Signal",
-        reason: reason,
-        _reportedBy: req.user,
-        _flagged: signal
-      });
-
-      newFlag.save(function (err, flag) {
+    if(req.user) {
+      db.Signal.findById(signalId, function(err, signal) {
         utils.returnErrorIf(err, err, res);
+        utils.returnErrorIf(!signal, 'No signal with this id.', res);
 
-        var flag = flag.toObject();
-        delete flag.__v;
-        res.send(flag);
+        var newFlag = new db.Flagged({
+          targetType: "Signal",
+          reason: reason,
+          _reportedBy: req.user,
+          _flagged: signal
+        });
+
+        newFlag.save(function (err, flag) {
+          utils.returnErrorIf(err, err, res);
+
+          var flag = flag.toObject();
+          delete flag.__v;
+          res.send(flag);
+        });
       });
-    });
-
+    }
   });
 
   // ===============================================
