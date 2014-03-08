@@ -1,10 +1,10 @@
 var db = require('../mongo/db');
-var passport = require('passport');
 
 
 function initApp(app) {
   var apiBaseUrl = '/api/',
     loginUrl = apiBaseUrl + 'login',
+    registerUrl = apiBaseUrl + 'register',
     signalTypesUrl = apiBaseUrl + 'signals-types',
     signalsUrl = apiBaseUrl + 'signals',
     signalUrl = apiBaseUrl + 'signals/:id',
@@ -112,14 +112,16 @@ function initApp(app) {
     returnErrorIf: function (bool, reason, res) {
       if (bool) {
         res.send({error: reason});
-        return false;
+        return true;
       }
+      return false;
     },
     isLogged: function(req, res) {
       if(!req.user) {
         res.send({error: 'Please login to use the api.'});
-        return false;
+        return true;
       }
+      return false;
     },
     createMetaData: function(url, totalCount, req) {
       var limit = req.query.limit || defaultLimit;
@@ -159,18 +161,18 @@ function initApp(app) {
     var password = req.body.password;
 
     //utils.returnErrorIf(!token, 'API key is missing.', res);
-    utils.returnErrorIf(!email, 'Please provide username.', res);
-    utils.returnErrorIf(!password, 'Please provide password.', res);
+    if(utils.returnErrorIf(!email, 'Please provide username.', res)) return false;
+    if(utils.returnErrorIf(!password, 'Please provide password.', res)) return false;
 
     var fields = '_id name email registerAt';
 
     db.User.findOne({email: email, password: password}, fields, function (err, user) {
-      utils.returnErrorIf(err, err, res);
-      utils.returnErrorIf(!user, 'Incorrect username or password.', res);
+      if(utils.returnErrorIf(err, err, res)) return false;
+      if(utils.returnErrorIf(!user, 'Incorrect username or password.', res)) return false;
 
       if(user) {
         req.login(user, function(err) {
-          utils.returnErrorIf(err, err, res);
+          if(utils.returnErrorIf(err, err, res)) return false;
           res.send(user);
         });
       }
@@ -178,14 +180,43 @@ function initApp(app) {
   });
 
   // ===============================================
+  // 9. Add user
+  // ===============================================
+  app.post(registerUrl, function (req, res) {
+    var username = req.body.username;
+    var password = req.body.password;
+    var name = req.body.name || '';
+
+    if(utils.returnErrorIf(!username, 'Please provide an email.', res)) return false;
+    if(utils.returnErrorIf(!password, 'Please provide a password.', res)) return false;
+
+    var newUser = new db.User({
+      name: name,
+      email: username,
+      password: password
+    });
+
+    newUser.save(function (err, user) {
+      if(utils.returnErrorIf(err && err.code == 11000, 'This email is already registered, please choose another one.', res)) return false;
+      if(utils.returnErrorIf(err, err, res)) return false;
+
+      user = user.toObject();
+      delete user.__v;
+
+      res.send(user);
+    });
+  });
+
+  // ===============================================
   // 2. Get signal types
   // ===============================================
   app.get(signalTypesUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
 
     db.SignalType.find({}, function (err, signalTypes) {
-      if (signalTypes) {
+      if(utils.returnErrorIf(err, err, res)) return false;
 
+      if (signalTypes) {
         var metadata = {
           total_count: signalTypes.length
         };
@@ -197,8 +228,6 @@ function initApp(app) {
       } else {
         res.send({});
       }
-
-      utils.returnErrorIf(err, err, res);
     });
   });
 
@@ -206,7 +235,7 @@ function initApp(app) {
   // 3. Get signals
   // ===============================================
   app.get(signalsUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
 
     var limit = req.query.limit || defaultLimit;
     var offset = req.query.offset || defaultOffset;
@@ -260,10 +289,10 @@ function initApp(app) {
     }
 
     db.Signal.count(function(err, count) {
-      utils.returnErrorIf(err, err, res);
+      if(utils.returnErrorIf(err, err, res)) return false;
 
       q.exec(function (err, entities) {
-        utils.returnErrorIf(err, err, res);
+        if(utils.returnErrorIf(err, err, res)) return false;
         if (entities) {
           for (var i = 0; i < entities.length; i++) {
             entities[i] = entities[i].toObject();
@@ -285,7 +314,7 @@ function initApp(app) {
   // 4. Add signal
   // ===============================================
   app.post(signalsUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
 
     var lat = req.body.lat;
     var lng = req.body.lng;
@@ -294,10 +323,10 @@ function initApp(app) {
     var description = req.body.description || '';
     var address = req.files.address;
 
-    utils.returnErrorIf(!lat, "Please provide geo lat.", res);
-    utils.returnErrorIf(!lng, "Please provide geo lng.", res);
-    utils.returnErrorIf(!type, "Please a signal type.", res);
-    utils.returnErrorIf(!address, "Please provide a signal type.", res);
+    if(utils.returnErrorIf(!lat, "Please provide geo lat.", res)) return false;
+    if(utils.returnErrorIf(!lng, "Please provide geo lng.", res)) return false;
+    if(utils.returnErrorIf(!type, "Please a signal type.", res)) return false;
+    if(utils.returnErrorIf(!address, "Please provide a signal type.", res)) return false;
 
     var signal = new db.Signal({
       location: [lat, lng],
@@ -310,7 +339,7 @@ function initApp(app) {
 
     signal.save(function (err, signal) {
 
-      utils.returnErrorIf(err, err, res);
+      if(utils.returnErrorIf(err, err, res)) return false;
 
       if (!photo) {
         var signalObj = signal.toObject();
@@ -321,12 +350,12 @@ function initApp(app) {
       } else {
         var publicFolder = "pictures";
         fileupload(photo.name, publicFolder, photo, function (err, image_url) {
-          utils.returnErrorIf(err, err, res);
+          if(utils.returnErrorIf(err, err, res)) return false;
 
           signal.image = image_url;
 
           signal.save(function (err, signal) {
-            utils.returnErrorIf(err, err, res);
+            if(utils.returnErrorIf(err, err, res)) return false;
 
             var signalObj = signal.toObject();
             delete signalObj.__v;
@@ -344,7 +373,7 @@ function initApp(app) {
   // 5. Get signal
   // ===============================================
   app.get(signalUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
 
     var fields = '';
     var signalId = req.params.id;
@@ -354,8 +383,8 @@ function initApp(app) {
     }
 
     db.Signal.findById(signalId, fields, function (err, signal) {
-      utils.returnErrorIf(err, err, res);
-      utils.returnErrorIf(!signal, 'No signal with this Id', res);
+      if(utils.returnErrorIf(err, err, res)) return false;
+      if(utils.returnErrorIf(!signal, 'No signal with this Id', res)) return false;
       res.send(signal);
     });
   });
@@ -377,7 +406,7 @@ function initApp(app) {
 
     if(req.user) {
       db.Signal.findById(signalId, function (err, signal) {
-        utils.returnErrorIf(err, err, res);
+        if(utils.returnErrorIf(err, err, res)) return false;
 
         if(signal.author == req.user.id) {
 
@@ -404,12 +433,12 @@ function initApp(app) {
           signal.updated = new Date();
 
           signal.save(function (err, signal) {
-            utils.returnErrorIf(err, err, res);
+            if(utils.returnErrorIf(err, err, res)) return false;
 
             res.send(signal);
           });
         } else {
-          utils.returnErrorIf(true, 'This is not your signal to update.', res);
+          if(utils.returnErrorIf(true, 'This is not your signal to update.', res)) return false;
         }
       });
     }
@@ -419,21 +448,22 @@ function initApp(app) {
   // 7. Delete signal
   // ===============================================
   app.delete(signalUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
+
     var signalId = req.params.id;
 
     db.Signal.findById(signalId, function (err, signal) {
-      utils.returnErrorIf(err, err, res);
-      utils.returnErrorIf(!signal, 'No signal with this Id', res);
+      if(utils.returnErrorIf(err, err, res)) return false;
+      if(utils.returnErrorIf(!signal, 'No signal with this Id', res)) return false;
 
       if(signal) {
         if(signal.author == req.user.id) {
           signal.remove(function (err, signal) {
-            utils.returnErrorIf(err, err, res);
+            if(utils.returnErrorIf(err, err, res)) return false;
             res.send(signal);
           })
         } else {
-          utils.returnErrorIf(true, 'This is not your signal to delete.', res);
+          if(utils.returnErrorIf(true, 'This is not your signal to delete.', res)) return false;
         }
       }
     });
@@ -443,7 +473,7 @@ function initApp(app) {
   // 8. Get users
   // ===============================================
   app.get(usersUrl, function (req, res) {
-    //utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
 
     //TODO filter by name - names like john /john/i
     var limit = req.query.limit || defaultLimit;
@@ -465,10 +495,10 @@ function initApp(app) {
     }
 
     db.User.count(function(err, count) {
-      utils.returnErrorIf(err, err, res);
+      if(utils.returnErrorIf(err, err, res)) return false;
 
       q.exec(function (err, entities) {
-        utils.returnErrorIf(err, err, res);
+        if(utils.returnErrorIf(err, err, res)) return false;
 
         //adds _url to the data
         if(entities) {
@@ -489,39 +519,10 @@ function initApp(app) {
   });
 
   // ===============================================
-  // 9. Add user
-  // ===============================================
-  app.post(usersUrl, function (req, res) {
-    utils.isLogged(req, res);
-
-    var email = req.body.email;
-    var password = req.body.password;
-    var name = req.body.name || '';
-
-    utils.returnErrorIf(!email, 'Please provide an email.', res);
-
-    var newUser = new db.User({
-      name: name,
-      email: email,
-      password: password
-    });
-
-    newUser.save(function (err, user) {
-      utils.returnErrorIf(err.code === 11000, 'This email is already registered, please choose another one.', res);
-      utils.returnErrorIf(err, err, res);
-
-      user = user.toObject();
-      delete user.__v;
-
-      res.send(user);
-    });
-  });
-
-  // ===============================================
   // 10. Get user
   // ===============================================
   app.get(userUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
 
     var userId = req.params.id;
     var fields = '';
@@ -531,8 +532,8 @@ function initApp(app) {
     }
 
     db.User.findById(userId, fields, function (err, user) {
-      utils.returnErrorIf(err, err, res);
-      utils.returnErrorIf(!user, 'No user with this id.', res);
+      if(utils.returnErrorIf(err, err, res)) return false;
+      if(utils.returnErrorIf(!user, 'No user with this id.', res)) return false;
 
       user = user.toObject();
       delete user.__v;
@@ -554,14 +555,15 @@ function initApp(app) {
   // 12. Delete user
   // ===============================================
   app.delete(userUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
+
     var userId = req.params.id;
 
     if(req.user) {
       if(req.user.id == userId) {
         db.User.findByIdAndRemove(userId, function (err, user) {
-          utils.returnErrorIf(err, err, res);
-          utils.returnErrorIf(!user, 'No user with this id.', res);
+          if(utils.returnErrorIf(err, err, res)) return false;
+          if(utils.returnErrorIf(!user, 'No user with this id.', res)) return false;
 
           user = user.toObject();
           delete user.__v;
@@ -569,7 +571,7 @@ function initApp(app) {
           res.send(user);
         });
       } else {
-        utils.returnErrorIf(true, 'You have no permissions to delete this user.', res);
+        if(utils.returnErrorIf(true, 'You have no permissions to delete this user.', res)) return false;
       }
     }
   });
@@ -578,7 +580,7 @@ function initApp(app) {
   // 13. Add comment
   // ===============================================
   app.post(commentsUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
 
     //TODO add image upload support
     var signalId = req.params.id;
@@ -586,12 +588,12 @@ function initApp(app) {
     var action = req.body.action;
     //var photo = req.body.photo;
 
-    utils.returnErrorIf(!text, 'Please provide a text for the comment.', res)
+    if(utils.returnErrorIf(!text, 'Please provide a text for the comment.', res)) return false;
 
     if(req.user) {
       db.Signal.findById(signalId, function (err, signal) {
-        utils.returnErrorIf(err, err, res);
-        utils.returnErrorIf(!signal, 'No signal with this id.', res);
+        if(utils.returnErrorIf(err, err, res)) return false;
+        if(utils.returnErrorIf(!signal, 'No signal with this id.', res)) return false;
 
         var newComment = {
           _author: req.user.id,
@@ -605,7 +607,7 @@ function initApp(app) {
         //add the comment to the parent signal
         signal.comments.push(newComment);
         signal.save(function (err, signal) {
-          utils.returnErrorIf(err, err, res);
+          if(utils.returnErrorIf(err, err, res)) return false;
           res.send(newComment);
         });
       });
@@ -617,7 +619,7 @@ function initApp(app) {
   // 14. Update comment
   // ===============================================
   app.put(commentUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
 
     if(req.user) {
       res.send('not implemented');
@@ -629,30 +631,30 @@ function initApp(app) {
   // 15. Delete comment
   // ===============================================
   app.delete(commentUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
 
     var signalId = req.params.id;
     var commentId = req.params.comment_id;
 
     if(req.user) {
       db.Signal.findById(signalId, function (err, signal) {
-        utils.returnErrorIf(err, err, res);
-        utils.returnErrorIf(!signal, 'No Signal with this id.', res);
+        if(utils.returnErrorIf(err, err, res)) return false;
+        if(utils.returnErrorIf(!signal, 'No Signal with this id.', res)) return false;
 
         var comment = signal.comments.id(commentId);
-        utils.returnErrorIf(!comment, 'No Comment with this id.', res);
+        if(utils.returnErrorIf(!comment, 'No Comment with this id.', res)) return false;
 
         if(comment) {
           if(comment._author == req.user.id) {
             comment.remove();
           } else {
-            utils.returnErrorIf(true, 'This is not your comment to delete.', res);
+            if(utils.returnErrorIf(true, 'This is not your comment to delete.', res)) return false;
           }
 
         }
 
         signal.save(function (err) {
-          utils.returnErrorIf(err, err, res);
+          if(utils.returnErrorIf(err, err, res)) return false;
 
           res.send(comment);
         });
@@ -664,17 +666,18 @@ function initApp(app) {
   // 16. Flag user
   // ===============================================
   app.post(flagUserUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
+
     //TODO - Add flag author - requesting user
     var userId = req.params.id;
     var reason = req.body.reason;
 
-    utils.returnErrorIf(!reason, 'Please provide a reason.', res);
+    if(utils.returnErrorIf(!reason, 'Please provide a reason.', res)) return false;
 
     if(req.user) {
       db.User.findById(userId, function(err, user) {
-        utils.returnErrorIf(err, err, res);
-        utils.returnErrorIf(!user, 'No user with this id.', res);
+        if(utils.returnErrorIf(err, err, res)) return false;
+        if(utils.returnErrorIf(!user, 'No user with this id.', res)) return false;
 
         var newFlag = new db.Flagged({
           targetType: "User",
@@ -684,7 +687,7 @@ function initApp(app) {
         });
 
         newFlag.save(function (err, flag) {
-          utils.returnErrorIf(err, err, res);
+          if(utils.returnErrorIf(err, err, res)) return false;
 
           var flag = flag.toObject();
           delete flag.__v;
@@ -698,21 +701,22 @@ function initApp(app) {
   // 17. flag comment
   // ===============================================
   app.post(flagCommentUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
+
     //TODO - Add flag author - requesting user
     var signalId = req.params.id;
     var commentId = req.params.comment_id;
     var reason = req.body.reason;
 
-    utils.returnErrorIf(!reason, 'Please provide a reason.', res);
+    if(utils.returnErrorIf(!reason, 'Please provide a reason.', res)) return false;
 
     if(req.user) {
       db.Signal.findById(signalId, function (err, signal) {
-        utils.returnErrorIf(err, err, res);
-        utils.returnErrorIf(!signal, 'No Signal with this id.', res);
+        if(utils.returnErrorIf(err, err, res)) return false;
+        if(utils.returnErrorIf(!signal, 'No Signal with this id.', res)) return false;
 
         var comment = signal.comments.id(commentId);
-        utils.returnErrorIf(!comment, 'No Comment with this id.', res);
+        if(utils.returnErrorIf(!comment, 'No Comment with this id.', res)) return false;
 
         if (comment) {
           var newFlag = new db.Flagged({
@@ -723,7 +727,7 @@ function initApp(app) {
           });
 
           newFlag.save(function (err, flag) {
-            utils.returnErrorIf(err, err, res);
+            if(utils.returnErrorIf(err, err, res)) return false;
 
             var flag = flag.toObject();
             delete flag.__v;
@@ -738,17 +742,18 @@ function initApp(app) {
   // 18. flag signal
   // ===============================================
   app.post(flagSignalUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
+
     //TODO - Add flag author - requesting user
     var signalId = req.params.id;
     var reason = req.body.reason;
 
-    utils.returnErrorIf(!reason, 'Please provide a reason.', res);
+    if(utils.returnErrorIf(!reason, 'Please provide a reason.', res)) return false;
 
     if(req.user) {
       db.Signal.findById(signalId, function(err, signal) {
-        utils.returnErrorIf(err, err, res);
-        utils.returnErrorIf(!signal, 'No signal with this id.', res);
+        if(utils.returnErrorIf(err, err, res)) return false;
+        if(utils.returnErrorIf(!signal, 'No signal with this id.', res)) return false;
 
         var newFlag = new db.Flagged({
           targetType: "Signal",
@@ -758,7 +763,7 @@ function initApp(app) {
         });
 
         newFlag.save(function (err, flag) {
-          utils.returnErrorIf(err, err, res);
+          if(utils.returnErrorIf(err, err, res)) return false;
 
           var flag = flag.toObject();
           delete flag.__v;
@@ -772,7 +777,7 @@ function initApp(app) {
   // 19. Vote up a signal
   // ===============================================
   app.post(voteUpSignalUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
     res.send('login');
   });
 
@@ -780,7 +785,7 @@ function initApp(app) {
   // 20. Say thanks to a closed signal
   // ===============================================
   app.post(sayThanksUrl, function (req, res) {
-    utils.isLogged(req, res);
+    if(!utils.isLogged(req, res)) return false;
     res.send('login');
   });
 
