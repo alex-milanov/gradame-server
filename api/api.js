@@ -211,7 +211,7 @@ function initApp(app) {
     var limit = req.query.limit || defaultLimit;
     var offset = req.query.offset || defaultOffset;
     var sort = req.query.sort; // '-type date'
-    var fields = 'type location description author status';
+    var fields = '';
 
     if (req.query.fields) {
       fields = req.query.fields.replace(/,/g, ' ');
@@ -346,7 +346,7 @@ function initApp(app) {
   app.get(signalUrl, function (req, res) {
     utils.isLogged(req, res);
 
-    var fields = 'location description type created comments thanks votes image validated updated image author authorName';
+    var fields = '';
     var signalId = req.params.id;
 
     if (req.query.fields) {
@@ -375,38 +375,44 @@ function initApp(app) {
     var address = req.body.address;
     var validated = req.body.validated;
 
-    db.Signal.findById(signalId, function (err, signal) {
-      utils.returnErrorIf(err, err, res);
-
-      if (lat && lng) {
-        signal.location = [lat, lng];
-      }
-
-      if (type) {
-        signal.type = type;
-      }
-
-      if (description) {
-        signal.description = description;
-      }
-
-      if (address) {
-        signal.address = address;
-      }
-
-      if (validated) {
-        signal.validated = validated;
-      }
-
-      signal.updated = new Date();
-
-      signal.save(function (err, signal) {
+    if(req.user) {
+      db.Signal.findById(signalId, function (err, signal) {
         utils.returnErrorIf(err, err, res);
 
-        res.send(signal);
-      })
-    });
+        if(signal.author == req.user.id) {
 
+          if (lat && lng) {
+            signal.location = [lat, lng];
+          }
+
+          if (type) {
+            signal.type = type;
+          }
+
+          if (description) {
+            signal.description = description;
+          }
+
+          if (address) {
+            signal.address = address;
+          }
+
+          if (validated) {
+            signal.validated = validated;
+          }
+
+          signal.updated = new Date();
+
+          signal.save(function (err, signal) {
+            utils.returnErrorIf(err, err, res);
+
+            res.send(signal);
+          });
+        } else {
+          utils.returnErrorIf(true, 'This is not your signal to update.', res);
+        }
+      });
+    }
   });
 
   // ===============================================
