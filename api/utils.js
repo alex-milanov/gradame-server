@@ -34,8 +34,13 @@ module.exports = {
     var nextPage = (parseInt(offset) + parseInt(limit));
     var prevPage = (parseInt(offset) - parseInt(limit));
 
-    var next = url + '?offset=' + nextPage + '&limit=' + limit;
-    var previous = url + '?offset=' + prevPage + '&limit=' + limit;
+    var next = url + '?offset=' + nextPage;
+    var previous = url + '?offset=' + prevPage;
+
+    if(limit !== defaultLimit) {
+      next += '&limit=' + limit;
+      previous += '&limit=' + limit;
+    }
 
     var metadata = {
       limit: limit,
