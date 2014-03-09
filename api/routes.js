@@ -372,19 +372,23 @@ routes.getUsers = function(req, res) {
   q.skip(offset);
   q.select(fields);
 
+  var countFilter = {};
+
   if(name) {
     q.where('name', new RegExp(name, 'i'));
+    countFilter.name = new RegExp(name, 'i');
   }
 
   if(email) {
     q.where('email', new RegExp(email, 'i'));
+    countFilter.email = new RegExp(email, 'i');
   }
 
   if (sort) {
     q.sort(sort);
   }
 
-  db.User.count(function(err, totalCount) {
+  db.User.count(countFilter, function(err, totalCount) {
     if(utils.returnErrorIf(err, err, res)) return false;
 
     q.exec(function(err, entities) {
