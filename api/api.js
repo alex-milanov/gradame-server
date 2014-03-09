@@ -1,4 +1,5 @@
-var db = require('../mongo/db');
+var db = require('../mongo/db'),
+    fileupload = require('../utils/upload');
 
 
 function initApp(app) {
@@ -336,12 +337,12 @@ function initApp(app) {
     var type = req.body.type;
     var photo = req.files.photo;
     var description = req.body.description || '';
-    var address = req.files.address;
+    var address = req.body.address;
 
     if(utils.returnErrorIf(!lat, "Please provide geo lat.", res)) return false;
     if(utils.returnErrorIf(!lng, "Please provide geo lng.", res)) return false;
     if(utils.returnErrorIf(!type, "Please a signal type.", res)) return false;
-    if(utils.returnErrorIf(!address, "Please provide a signal type.", res)) return false;
+    if(utils.returnErrorIf(!address, "Please provide a signal address.", res)) return false;
 
     if(req.user) {
       var signal = new db.Signal({
@@ -364,22 +365,7 @@ function initApp(app) {
 
           res.send({data: signalObj});
         } else {
-          var publicFolder = "pictures";
-          fileupload(photo.name, publicFolder, photo, function(err, image_url) {
-            if(utils.returnErrorIf(err, err, res)) return false;
-
-            signal.image = image_url;
-
-            signal.save(function(err, signal) {
-              if(utils.returnErrorIf(err, err, res)) return false;
-
-              var signalObj = signal.toObject();
-              delete signalObj.__v;
-              signalObj._url = signalsUrl + '/' + signalObj._id;
-
-              res.send({data: signalObj});
-            });
-          });
+          //upload file
         }
       });
     }
@@ -415,13 +401,13 @@ function initApp(app) {
   app.put(signalUrl, function(req, res) {
     if(!utils.isLogged(req, res)) return false;
 
-    var signalId = req.params.id;
-    var lat = req.body.lat;
-    var lng = req.body.lng;
-    var type = req.body.type;
-    var description = req.body.description || '';
-    var address = req.body.address;
-    var validated = req.body.validated;
+    var signalId = req.params.id,
+        lat = req.body.lat,
+        lng = req.body.lng,
+        type = req.body.type,
+        description = req.body.description || '',
+        address = req.body.address,
+        validated = req.body.validated;
 
     if(req.user) {
       db.Signal.findById(signalId, function(err, signal) {
@@ -579,8 +565,51 @@ function initApp(app) {
   // ===============================================
   app.put(userUrl, function(req, res) {
     if(!utils.isLogged(req, res)) return false;
-    //TODO update user - change password, avatar image
-    res.send('login');
+
+    var userId = req.params.id,
+        password = req.body.password,
+        image = req.files.image,
+        name = req.body.name;
+
+    db.User.findById(userId, function(err, user) {
+      if(utils.returnErrorIf(err, err, res)) return false;
+      if(utils.returnErrorIf(!user, 'No user with this id.', res)) return false;
+
+      if(user.id !== req.user.id) {
+        if(utils.returnErrorIf(true, 'You don\'t have permission to update this user.', res)) return false;
+      } else {
+
+        if(password) {
+          user.password = password;
+        }
+
+        if(name) {
+          user.name = name;
+        }
+
+        if(image) {
+          fileupload.avatarUpload(user.id, image, function(err, imageUrl) {
+            if(utils.returnErrorIf(err, err, res)) return false;
+            saveUser();
+          });
+        } else {
+          saveUser();
+        }
+
+        function saveUser() {
+          if(password || name) {
+            user.save(function(err, user) {
+              if(utils.returnErrorIf(err, err, res)) return false;
+              user = user.toObject();
+              delete user.__v;
+              delete user.password;
+              delete user.email;
+              res.send(user);
+            });
+          }
+        }
+      }
+    });
   });
 
   // ===============================================
