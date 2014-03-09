@@ -335,7 +335,7 @@ function initApp(app) {
     var lat = req.body.lat;
     var lng = req.body.lng;
     var type = req.body.type;
-    var photo = req.files.photo;
+    var image = req.files.photo;
     var description = req.body.description || '';
     var address = req.body.address;
 
@@ -354,20 +354,26 @@ function initApp(app) {
         authorName: req.user.name
       });
 
-      signal.save(function(err, signal) {
+      if(image) {
+        fileupload.avatarUpload(user.id, image, function(err, imageUrl) {
+          if(utils.returnErrorIf(err, err, res)) return false;
+          signal.image = imageUrl;
+          saveSignal();
+        });
+      } else {
+        saveSignal();
+      }
 
-        if(utils.returnErrorIf(err, err, res)) return false;
+      function saveSignal() {
+        signal.save(function(err, signal) {
+          if(utils.returnErrorIf(err, err, res)) return false;
+            var signalObj = signal.toObject();
+            delete signalObj.__v;
+            signalObj._url = signalsUrl + '/' + signalObj._id;
 
-        if (!photo) {
-          var signalObj = signal.toObject();
-          delete signalObj.__v;
-          signalObj._url = signalsUrl + '/' + signalObj._id;
-
-          res.send({data: signalObj});
-        } else {
-          //upload file
-        }
-      });
+            res.send({data: signalObj});
+        });
+      }
     }
   });
 
@@ -435,16 +441,28 @@ function initApp(app) {
             signal.validated = validated;
           }
 
-          signal.updated = new Date();
+          if(image) {
+            fileupload.avatarUpload(user.id, image, function(err, imageUrl) {
+              if(utils.returnErrorIf(err, err, res)) return false;
+              signal.image = imageUrl;
+              saveSignal();
+            });
+          } else {
+            saveSignal();
+          }
 
-          signal.save(function(err, signal) {
-            if(utils.returnErrorIf(err, err, res)) return false;
+          function saveSignal() {
+            signal.updated = new Date();
 
-            signal = signal.toObject();
-            delete signal.__v;
+            signal.save(function(err, signal) {
+              if(utils.returnErrorIf(err, err, res)) return false;
 
-            res.send(signal);
-          });
+              signal = signal.toObject();
+              delete signal.__v;
+
+              res.send(signal);
+            });
+          }
         } else {
           if(utils.returnErrorIf(true, 'This is not your signal to update.', res)) return false;
         }
