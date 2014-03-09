@@ -641,11 +641,10 @@ function initApp(app) {
   app.post(commentsUrl, function(req, res) {
     if(!utils.isLogged(req, res)) return false;
 
-    //TODO add image upload support
     var signalId = req.params.id;
     var text = req.body.text;
     var action = req.body.action;
-    //var photo = req.body.photo;
+    var image = req.files.image;
 
     if(utils.returnErrorIf(!text, 'Please provide a text for the comment.', res)) return false;
 
@@ -658,17 +657,28 @@ function initApp(app) {
           _author: req.user.id,
           authorName: req.user.name,
           date: new Date(),
-          //image: photo,
           text: text,
           action: action
         };
 
+        if(image) {
+          fileupload.pictureUpload(image.name, image, function(err, imageUrl){
+            if(utils.returnErrorIf(err, err, res)) return false;
+            newComment.image = imageUrl;
+            saveComment();
+          });
+        } else {
+          saveComment();
+        }
+
         //add the comment to the parent signal
-        signal.comments.push(newComment);
-        signal.save(function(err, signal) {
-          if(utils.returnErrorIf(err, err, res)) return false;
-          res.send(newComment);
-        });
+        function saveComment() {
+          signal.comments.push(newComment);
+          signal.save(function(err, signal) {
+            if(utils.returnErrorIf(err, err, res)) return false;
+            res.send(newComment);
+          });
+        }
       });
     }
 
@@ -680,10 +690,55 @@ function initApp(app) {
   app.put(commentUrl, function(req, res) {
     if(!utils.isLogged(req, res)) return false;
 
+    var signalId = req.params.id;
+    var commentId = req.params.comment_id;
+
+    var text = req.body.text;
+    var action = req.body.action;
+    var image = req.files.image;
+
     if(req.user) {
-      res.send('not implemented');
+      db.Signal.findById(signalId, function(err, signal) {
+        if(utils.returnErrorIf(err, err, res)) return false;
+        if(utils.returnErrorIf(!signal, 'No Signal with this id.', res)) return false;
+
+        var comment = signal.comments.id(commentId);
+        if(utils.returnErrorIf(!comment, 'No Comment with this id.', res)) return false;
+
+        if(comment) {
+          if(comment._author == req.user.id) {
+
+            if(text) {
+              comment.text = text;
+            }
+            if(action) {
+              comment.action = action;
+            }
+
+            if(image) {
+              fileupload.pictureUpload(image.name, image, function(err, imageUrl){
+                if(utils.returnErrorIf(err, err, res)) return false;
+                comment.image = imageUrl;
+                saveComment();
+              });
+            } else {
+              saveComment();
+            }
+          } else {
+            if(utils.returnErrorIf(true, 'This is not your comment to update.', res)) return false;
+          }
+        }
+
+        function saveComment() {
+          comment.updated = new Date();
+
+          signal.save(function(err) {
+            if(utils.returnErrorIf(err, err, res)) return false;
+            res.send(comment);
+          });
+        }
+      });
     }
-    //TODO Update only if requesting user is author
   });
 
   // ===============================================
@@ -700,7 +755,7 @@ function initApp(app) {
         if(utils.returnErrorIf(err, err, res)) return false;
         if(utils.returnErrorIf(!signal, 'No Signal with this id.', res)) return false;
 
-        var comment = signal.comment(commentId);
+        var comment = signal.comments.id(commentId);
         if(utils.returnErrorIf(!comment, 'No Comment with this id.', res)) return false;
 
         if(comment) {

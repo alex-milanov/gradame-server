@@ -7,6 +7,11 @@ var fs = require('fs');
 module.exports = {
 
   avatarUpload: function (name, image, handler) {
+    var public_folder = 'avatars';
+    this.upload(name, public_folder, image, handler)
+  },
+
+  pictureUpload: function (name, image, handler) {
     var public_folder = 'pictures';
     this.upload(name, public_folder, image, handler)
   },
